@@ -47,17 +47,13 @@ export async function copyStudentsToGroup(
   studentIds: string[],
   toGroupId: string
 ) {
-  try {
-    return await requestApiAsync(`/groups/${toGroupId}/students`, {
-      method: 'POST',
-      body: {
-        studentIds,
-      },
-      json: true,
-    });
-  } catch (e) {
-    console.error(e);
-  }
+  return requestApiAsync(`/groups/${toGroupId}/students`, {
+    method: 'POST',
+    body: {
+      studentIds,
+    },
+    json: true,
+  });
 }
 
 async function requestSiteJsonAsync<T>(uri: string): Promise<T> {
@@ -66,10 +62,19 @@ async function requestSiteJsonAsync<T>(uri: string): Promise<T> {
 }
 
 async function requestSiteAsync(uri: string): Promise<string> {
-  return request({
+  const response = await request({
     url: baseSiteUrl + uri,
+    method: 'GET',
+    resolveWithFullResponse: true,
+    simple: false,
     headers: { cookie: `ulearn.auth=${authCookie}` },
   });
+  if (response.headers['content-type'].startsWith('application/json')) {
+    return response.body;
+  } else {
+    console.error('>> Ulearn Site error. Perhaps, you should update "ulearn.auth" cookie');
+    return null;
+  }
 }
 
 async function requestApiJsonAsync<T>(
@@ -84,11 +89,20 @@ async function requestApiAsync(
   uri: string,
   options?: RequestOptions
 ): Promise<string> {
-  return request({
+  const response = await request({
     ...options,
     url: baseApiUrl + uri,
+    method: 'GET',
+    resolveWithFullResponse: true,
+    simple: false,
     headers: { Authorization: 'Bearer ' + token },
   });
+  if (response.headers['content-type'].startsWith('application/json')) {
+    return response.body;
+  } else {
+    console.error('>> Ulearn API error. Perhaps, you should update "ulearn.jwt" token');
+    return null;
+  }
 }
 
 interface RequestOptions {

@@ -1,14 +1,13 @@
 import * as fs from 'fs';
 import { Credentials } from 'google-auth-library';
 import { google } from 'googleapis';
-import { OAuth2Client } from 'googleapis-common';
 import * as readline from 'readline';
 
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 const TOKENS_PATH = './secrets/google-tokens.json';
 const PROJECT_CONFIG_PATH = './secrets/google.json';
 
-export type AuthorizePolicy = 'always-new' | 'ask' | 'only-saved';
+export type AuthorizePolicy = 'always-new' | 'ask' | 'ask-if-not-saved' | 'only-saved';
 
 export async function authorizeAsync(policy: AuthorizePolicy) {
   const projectConfig = JSON.parse(
@@ -34,19 +33,38 @@ export async function authorizeAsync(policy: AuthorizePolicy) {
     saveTokens({ ...currentTokens, ...tokens });
   });
 
-  let code = null;
-  if (policy === 'always-new' || policy === 'ask') {
-    const authUrl = authClient.generateAuthUrl({
-      access_type: 'offline',
-      scope: SCOPES,
-    });
-    console.log('Authorize this app by visiting this url:', authUrl);
-    console.log();
-    code = await askCodeAsync();
+  const savedTokens = loadTokens();
+
+  if (policy === 'only-saved') {
+    if (savedTokens) {
+      authClient.setCredentials(savedTokens);
+    }
+    return authClient;
   }
 
-  await trySetCredentials(authClient, code);
+  if (policy === 'ask-if-not-saved' && savedTokens) {
+    authClient.setCredentials(savedTokens);
+    return authClient;
+  }
 
+  const authUrl = authClient.generateAuthUrl({
+    access_type: 'offline',
+    scope: SCOPES,
+  });
+  console.log('Authorize this app by visiting this url:', authUrl);
+  console.log();
+  const code = await askCodeAsync();
+
+  if (code) {
+    const response = await authClient.getToken(code);
+    saveTokens(response.tokens);
+    authClient.setCredentials(response.tokens);
+    return authClient;
+  }
+
+  if (savedTokens) {
+    authClient.setCredentials(savedTokens);
+  }
   return authClient;
 }
 
@@ -64,19 +82,6 @@ function askCodeAsync(): Promise<string> {
       }
     );
   });
-}
-
-async function trySetCredentials(authClient: OAuth2Client, code: string) {
-  if (code) {
-    const response = await authClient.getToken(code);
-    saveTokens(response.tokens);
-    authClient.setCredentials(response.tokens);
-  } else {
-    const tokens = loadTokens();
-    if (tokens) {
-      authClient.setCredentials(tokens);
-    }
-  }
 }
 
 function clearTokens() {

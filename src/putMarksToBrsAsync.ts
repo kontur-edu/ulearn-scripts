@@ -5,7 +5,7 @@ import {
   StudentMark,
   TermType,
 } from './apis/brsApi';
-import { ActualStudent } from './apis/fileApi';
+import { ActualStudent } from './readStudentsAsync';
 
 export default async function putMarksToBrsAsync(
   secretName: string,
@@ -73,6 +73,9 @@ async function putMarksForDisciplineAsync(
     controlActions,
     options
   );
+  if (options.save) {
+    await brsApi.updateAllMarksAsync(discipline);
+  }
   console.log();
 
   console.log();
@@ -148,7 +151,7 @@ async function putMarksForStudent(
 
     try {
       if (options.save) {
-        await brsApi.putStudentMark(
+        await brsApi.putStudentMarkAsync(
           student.brs.studentUuid,
           controlAction.uuidWithoutPrefix,
           actualMark

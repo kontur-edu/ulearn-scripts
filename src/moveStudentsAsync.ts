@@ -1,6 +1,6 @@
-import { ActualStudent } from './apis/fileApi';
 import * as ulearnApi from './apis/ulearnApi';
 import { Group, Student } from './apis/ulearnApi';
+import { ActualStudent } from './readStudentsAsync';
 
 export default async function moveStudentsAsync(
   courseId: string,

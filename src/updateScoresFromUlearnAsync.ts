@@ -7,6 +7,7 @@ import {
   Statistics,
   StatisticsStudent,
 } from './apis/ulearnApi';
+import prepareFio from './helpers/prepareFio';
 
 export default async function updateScoresFromUlearn(
   spreadsheetId: string,
@@ -15,7 +16,7 @@ export default async function updateScoresFromUlearn(
   updateTimeRange: string,
   courseId: string,
   groupNames: string[],
-  authorizePolicy: googleApi.AuthorizePolicy = 'ask'
+  authorizePolicy: googleApi.AuthorizePolicy = 'ask-if-not-saved'
 ) {
   const studentScores = await getStudentScoresAsync(courseId, groupNames);
 
@@ -93,7 +94,7 @@ async function fillSheetWithScoresAsync(
 function getRowByStudentScore(studentScore: StudentScore) {
   return [
     studentScore.id,
-    studentScore.name,
+    prepareFio(studentScore.name),
     studentScore.groupName,
     studentScore.scores.exercise,
     studentScore.scores.homework,

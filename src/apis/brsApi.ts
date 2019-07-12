@@ -74,8 +74,8 @@ async function getStudentMarksInternalAsync(
 ) {
   return requestApiJsonAsync<StudentMark[]>(
     `/mvc/mobile/studentMarks/fetch?disciplineLoad=${disciplineLoad}&groupUuid=${groupHistoryId}` +
-      `&cardType=${cardType}&hasTest=false&isTotal=${isTotal}&intermediate=${markType ===
-        'intermediate'}` +
+      `&cardType=${cardType}&hasTest=false&isTotal=${isTotal}` +
+      `&intermediate=${markType === 'intermediate'}` +
       `&selectedTeachers=null&showActiveStudents=${showActiveStudents}`
   );
 }
@@ -114,7 +114,7 @@ async function getControlActionsCachedAsync(
     return cacheResult;
   }
 
-  const result = await getgetControlActionsInternalAsync(
+  const result = await getControlActionsInternalAsync(
     discipline.disciplineLoad,
     discipline.groupHistoryId,
     cardType,
@@ -124,7 +124,7 @@ async function getControlActionsCachedAsync(
   return result;
 }
 
-async function getgetControlActionsInternalAsync(
+async function getControlActionsInternalAsync(
   disciplineLoad: string,
   groupHistoryId: string,
   cardType: CardType,
@@ -164,7 +164,7 @@ async function getgetControlActionsInternalAsync(
   return result as ControlAction[];
 }
 
-export async function putStudentMark(
+export async function putStudentMarkAsync(
   studentUuid: string,
   controlActionId: string,
   mark: number
@@ -174,6 +174,52 @@ export async function putStudentMark(
   }`;
   return requestApiJsonAsync<StudentMark>(
     `/mvc/mobile/studentMarks/put`,
+    {
+      method: 'POST',
+      body,
+      json: false,
+    },
+    {
+      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+    }
+  );
+}
+
+export async function updateAllMarksAsync(discipline: Discipline) {
+  // Одного вызова достаточно, чтобы обновить все оценки по предмету у группы.
+  await updateMarksAsync(discipline, 'lecture', 'intermediate');
+  // await updateMarksAsync(discipline, 'lecture', 'current');
+  // await updateMarksAsync(discipline, 'lecture', 'intermediate');
+  // await updateMarksAsync(discipline, 'laboratory', 'current');
+  // await updateMarksAsync(discipline, 'laboratory', 'intermediate');
+}
+
+async function updateMarksAsync(
+  discipline: Discipline,
+  cardType: CardType,
+  markType: MarkType
+) {
+  return updateMarksInternalAsync(
+    discipline.disciplineLoad,
+    discipline.groupHistoryId,
+    cardType,
+    markType
+  );
+}
+
+async function updateMarksInternalAsync(
+  disciplineLoad: string,
+  groupHistoryId: string,
+  cardType: CardType,
+  markType: MarkType
+) {
+  const body =
+    `disciplineLoad=${disciplineLoad}&groupUuid=${groupHistoryId}` +
+    `&cardType=${cardType}&hasTest=false&isTotal=false` +
+    `&intermediate=${markType === 'intermediate'}` +
+    `&selectedTeachers=null&showActiveStudents=true`;
+  return requestApiAsync(
+    `/mvc/mobile/updateMarks`,
     {
       method: 'POST',
       body,
