@@ -69,7 +69,8 @@ async function requestSiteAsync(uri: string): Promise<string> {
     simple: false,
     headers: { cookie: `ulearn.auth=${authCookie}` },
   });
-  if (response.headers['content-type'].startsWith('application/json')) {
+  const contentType = response.headers['content-type'];
+  if (contentType !== undefined && contentType.startsWith('application/json')) {
     return response.body;
   } else {
     console.error('>> Ulearn Site error. Perhaps, you should update "ulearn.auth" cookie');
@@ -90,14 +91,15 @@ async function requestApiAsync(
   options?: RequestOptions
 ): Promise<string> {
   const response = await request({
-    ...options,
     url: baseApiUrl + uri,
     method: 'GET',
     resolveWithFullResponse: true,
     simple: false,
     headers: { Authorization: 'Bearer ' + token },
+    ...options
   });
-  if (response.headers['content-type'].startsWith('application/json')) {
+  const contentType = response.headers['content-type'];
+  if (contentType !== undefined && contentType.startsWith('application/json')) {
     return response.body;
   } else {
     console.error('>> Ulearn API error. Perhaps, you should update "ulearn.jwt" token');
