@@ -5,6 +5,7 @@ import {
   StudentMark,
   TermType,
 } from './apis/brsApi';
+import * as fio from './helpers/fio';
 import { ActualStudent } from './readStudentsAsync';
 
 export default async function putMarksToBrsAsync(
@@ -204,9 +205,7 @@ function getSuitableControlAction(
         `Invalid configuration of ${config.controlActions.join(', ')}`
       );
       console.log(
-        `Can't match: ${config.matchIndex}/${config.matchCount} of ${
-          suitableControlActions.length
-        }`
+        `Can't match: ${config.matchIndex}/${config.matchCount} of ${suitableControlActions.length}`
       );
       return null;
     }
@@ -265,8 +264,8 @@ function areStudentsLike(
   brsStudent: StudentMark,
   actualStudent: ActualStudent
 ) {
-  const brsFullName = brsStudent.studentFio.replace('ё', 'е');
-  const actualFullName = actualStudent.fullName.replace('ё', 'е');
+  const brsFullName = fio.toKey(brsStudent.studentFio);
+  const actualFullName = fio.toKey(actualStudent.fullName);
   return brsFullName.startsWith(actualFullName);
 }
 

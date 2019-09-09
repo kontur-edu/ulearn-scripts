@@ -5,6 +5,7 @@ secrets
 # Local data
 .cache
 data
+logs
 
 # Dependency directory
 node_modules

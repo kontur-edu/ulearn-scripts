@@ -1,5 +1,6 @@
 import * as ulearnApi from './apis/ulearnApi';
 import { Group, Student } from './apis/ulearnApi';
+import * as fio from './helpers/fio';
 import { ActualStudent } from './readStudentsAsync';
 
 export default async function moveStudentsAsync(
@@ -27,7 +28,7 @@ async function moveStudentAsync(
   console.log(`>>> '${fullName}' processing...`);
 
   const suitableActualStudents = actualStudents.filter(
-    s => s.fullName === fullName
+    s => fio.toKey(s.fullName) === fio.toKey(fullName)
   );
   if (suitableActualStudents.length !== 1) {
     console.log(

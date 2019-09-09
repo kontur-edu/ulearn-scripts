@@ -7,7 +7,7 @@ import {
   Statistics,
   StatisticsStudent,
 } from './apis/ulearnApi';
-import prepareFio from './helpers/prepareFio';
+import * as fio from './helpers/fio';
 
 export default async function updateScoresFromUlearn(
   spreadsheetId: string,
@@ -16,9 +16,14 @@ export default async function updateScoresFromUlearn(
   updateTimeRange: string,
   courseId: string,
   groupNames: string[],
+  onlyMaxScoresForHomework: boolean,
   authorizePolicy: googleApi.AuthorizePolicy = 'ask-if-not-saved'
 ) {
-  const studentScores = await getStudentScoresAsync(courseId, groupNames);
+  const studentScores = await getStudentScoresAsync(
+    courseId,
+    groupNames,
+    onlyMaxScoresForHomework
+  );
 
   await googleApi.authorizeAsync(authorizePolicy);
   const sheet = googleApi.openSpreadsheet(spreadsheetId);
@@ -94,14 +99,18 @@ async function fillSheetWithScoresAsync(
 function getRowByStudentScore(studentScore: StudentScore) {
   return [
     studentScore.id,
-    prepareFio(studentScore.name),
     studentScore.groupName,
+    fio.toKey(studentScore.name),
     studentScore.scores.exercise,
     studentScore.scores.homework,
   ];
 }
 
-async function getStudentScoresAsync(courseId: string, groupNames: string[]) {
+async function getStudentScoresAsync(
+  courseId: string,
+  groupNames: string[],
+  onlyMaxScoresForHomework: boolean
+) {
   const availableGroups = await ulearnApi.getGroupsAsync(courseId);
   const filteredGroups = availableGroups.filter(g =>
     groupNames.some(n => g.name === n)
@@ -115,7 +124,7 @@ async function getStudentScoresAsync(courseId: string, groupNames: string[]) {
 
   const slideScores = getSlideScores(statistics);
   const students = statistics.students.map(s =>
-    getStudentScore(s, slideScores, filteredGroups)
+    getStudentScore(s, slideScores, filteredGroups, onlyMaxScoresForHomework)
   );
 
   const result: StudentScores = {};
@@ -141,7 +150,8 @@ function getSlideScores(statistics: Statistics) {
 function getStudentScore(
   student: StatisticsStudent,
   slideScores: SlideScores,
-  groups: Group[]
+  groups: Group[],
+  onlyMaxScoresForHomework: boolean
 ): StudentScore {
   const scores = {
     activity: 0,
@@ -153,6 +163,7 @@ function getStudentScore(
   for (const score of student.slides_scores) {
     const slideScore = slideScores[score.slide_id];
     if (
+      !onlyMaxScoresForHomework ||
       slideScore.scoringGroup !== 'homework' ||
       score.score === slideScore.maxScore
     ) {
@@ -184,7 +195,7 @@ interface StudentScores {
 interface StudentScore {
   id: string;
   name: string;
-  groupId: string;
+  groupId: number;
   groupName: string;
   scores: { [key in ScoringGroup]: number };
 }

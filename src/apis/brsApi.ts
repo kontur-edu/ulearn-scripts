@@ -106,9 +106,7 @@ async function getControlActionsCachedAsync(
   cardType: CardType,
   markType: MarkType
 ) {
-  const cacheName = `${globalLogin}_getControlActions_${
-    discipline.disciplineLoad
-  }_${discipline.groupHistoryId}_${cardType}_${markType}`;
+  const cacheName = `${globalLogin}_getControlActions_${discipline.disciplineLoad}_${discipline.groupHistoryId}_${cardType}_${markType}`;
   const cacheResult = cache.read<ControlAction[]>(cacheName);
   if (cacheResult) {
     return cacheResult;
@@ -130,7 +128,7 @@ async function getControlActionsInternalAsync(
   cardType: CardType,
   markType: MarkType
 ) {
-  const response = await requestApiAsync(
+  const response = await requestApiAsync<string>(
     `/mvc/mobile/view/mark/${disciplineLoad}/${groupHistoryId}/teachers/${cardType}/${markType}`
   );
 
@@ -218,7 +216,7 @@ async function updateMarksInternalAsync(
     `&cardType=${cardType}&hasTest=false&isTotal=false` +
     `&intermediate=${markType === 'intermediate'}` +
     `&selectedTeachers=null&showActiveStudents=true`;
-  return requestApiAsync(
+  return requestApiAsync<string>(
     `/mvc/mobile/updateMarks`,
     {
       method: 'POST',
@@ -271,18 +269,18 @@ async function requestApiJsonAsync<T>(
   options?: RequestOptions,
   headers?: RequestHeaders
 ): Promise<T> {
-  const response = await requestApiAsync(uri, options, headers);
+  const response = await requestApiAsync<string>(uri, options, headers);
   if (response.trimLeft().startsWith('<!DOCTYPE html>')) {
     throw new Error('Forbidden');
   }
   return JSON.parse(response);
 }
 
-async function requestApiAsync(
+async function requestApiAsync<T>(
   uri: string,
   options?: RequestOptions,
   headers?: RequestHeaders
-): Promise<string> {
+): Promise<T> {
   if (!globalSid) {
     throw new Error(
       'Not authenticated. Use authByConfigAsync or authAsync to authenticate'
@@ -290,6 +288,7 @@ async function requestApiAsync(
   }
 
   return request({
+    method: 'GET',
     ...options,
     url: baseUrl + uri,
     headers: {

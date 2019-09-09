@@ -1,4 +1,5 @@
 import { TermType } from './apis/brsApi';
+import createGroupsAsync from './createGroupsAsync';
 import moveStudentsAsync from './moveStudentsAsync';
 import putMarksToBrsAsync from './putMarksToBrsAsync';
 import { ControlActionConfig } from './putMarksToBrsAsync';
@@ -8,9 +9,37 @@ import updateScoresFromUlearnAsync from './updateScoresFromUlearnAsync';
 // runSample();
 
 async function runSample() {
+  await runCreateGroupsForSample();
+  await runMoveStudentsForSample();
   await runUpdateScoresForSample();
   await runUpdateScoresComplexityForSample();
-  await runMoveStudentsForSample();
+}
+
+async function runCreateGroupsForSample() {
+  const groupNames = [
+    'КФ-180001-1',
+  ];
+  const courseId = 'basicprogramming';
+  const reviewMode = 'all';
+  await createGroupsAsync(courseId, groupNames, ['homework'], reviewMode);
+}
+
+async function runMoveStudentsForSample() {
+  try {
+    const actualStudents = readStudents.fromCvs(
+      './data/students.csv',
+      false,
+      2,
+      0,
+    );
+    await moveStudentsAsync(
+      'basicprogramming',
+      'Регистрация КрутойФакультет, 2018',
+      actualStudents
+    );
+  } catch (e) {
+    console.log(e);
+  }
 }
 
 async function runUpdateScoresForSample() {
@@ -29,6 +58,7 @@ async function runUpdateScoresForSample() {
     updateTimeRange,
     courseId,
     groupNames,
+    false,
     'ask-if-not-saved'
   );
   console.log(result);
@@ -50,27 +80,10 @@ async function runUpdateScoresComplexityForSample() {
     updateTimeRange,
     courseId,
     groupNames,
+    false,
     'ask-if-not-saved'
   );
   console.log(result);
-}
-
-async function runMoveStudentsForSample() {
-  try {
-    const actualStudents = readStudents.fromCvs(
-      './data/students.csv',
-      false,
-      2,
-      0,
-    );
-    await moveStudentsAsync(
-      'basicprogramming',
-      'Регистрация КрутойФакультет, 2018',
-      actualStudents
-    );
-  } catch (e) {
-    console.log(e);
-  }
 }
 
 async function runPutMarksForSample() {
