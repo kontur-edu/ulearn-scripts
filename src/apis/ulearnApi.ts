@@ -53,6 +53,13 @@ export async function deleteGroupAsync(groupId: number) {
   });
 }
 
+export async function copyGroupAsync(groupId: number, destinationCourseId: string, makeMeOwner: boolean) {
+  return requestApiAsync<GroupPosted>(`/groups/${groupId}/copy?destination_course_id=${destinationCourseId}&make_me_owner=${makeMeOwner}`, {
+    method: 'POST',
+    json: true,
+  });
+}
+
 export async function getGroupScoresAsync(groupId: number) {
   return requestApiJsonAsync<GroupScores>(`/groups/${groupId}/scores`);
 }
