@@ -44,6 +44,7 @@ async function moveStudentAsync(
 
   if (targetGroup.id === sourceGroup.id) {
     console.log(`    Source and target groups match ('${targetGroup.name}')`);
+    return;
   }
 
   if (await isGroupContainsStudentAsync(targetGroup, student)) {
