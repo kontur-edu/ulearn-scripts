@@ -3,8 +3,12 @@ import {
   ControlAction,
   Discipline,
   StudentMark,
-  TermType,
+  TermType
 } from './apis/brsApi';
+import {
+  parseAnyFloat,
+  compareFixed
+} from './helpers/tools';
 import * as fio from './helpers/fio';
 import { ActualStudent } from './readStudentsAsync';
 
@@ -12,6 +16,7 @@ export default async function putMarksToBrsAsync(
   secretName: string,
   actualStudents: ActualStudent[],
   disciplineName: string,
+  isModuleDiscipline: boolean,
   year: number,
   course: number,
   termType: TermType,
@@ -21,16 +26,18 @@ export default async function putMarksToBrsAsync(
   try {
     await brsApi.authByConfigAsync(secretName);
 
-    const disciplines = (await brsApi.getDisciplineCachedAsync(
+    const allDisciplines = (await brsApi.getDisciplineCachedAsync(
       year,
       course,
-      termType
-    )).filter(d => d.discipline === disciplineName);
+      termType,
+      isModuleDiscipline
+    ))
+    const disciplines = allDisciplines.filter(d => compareFixed(d.discipline, disciplineName));
 
     for (const discipline of disciplines) {
       await putMarksForDisciplineAsync(
         discipline,
-        actualStudents.filter(s => s.groupName === discipline.group),
+        actualStudents.filter(s => compareFixed(s.groupName, discipline.group)),
         controlActionConfigs,
         options
       );
@@ -137,11 +144,8 @@ async function putMarksForStudent(
       throw new Error();
     }
 
-    const brsMark = parseInt(student.brs[controlAction.uuid] as string, 10);
-    const actualMark = parseInt(
-      student.actual.properties[config.propertyIndex],
-      10
-    );
+    const brsMark = parseAnyFloat(student.brs[controlAction.uuid] as string);
+    const actualMark = parseAnyFloat(student.actual.properties[config.propertyIndex]);
 
     if (actualMark === brsMark) {
       marks.push(`  ${actualMark} `.substr(`${actualMark}`.length - 1));

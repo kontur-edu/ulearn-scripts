@@ -10,15 +10,21 @@ let globalLogin: string = null;
 export async function getDisciplineCachedAsync(
   year: number,
   course: number,
-  termType: TermType
+  termType: TermType,
+  isModule: boolean
 ) {
-  const cacheName = `${globalLogin}_getDiscipline_${year}_${course}_${termType}`;
+  const cacheName = `${globalLogin}_getDiscipline_${year}_${course}_${termType}_${isModule}`;
   const cacheResult = cache.read<Discipline[]>(cacheName);
   if (cacheResult) {
     return cacheResult;
   }
 
-  const result = await getDisciplineInternalAsync(year, course, termType);
+  const result = await getDisciplineInternalAsync(
+    year,
+    course,
+    termType,
+    isModule
+  );
   cache.save(cacheName, result);
   return result;
 }
@@ -26,12 +32,28 @@ export async function getDisciplineCachedAsync(
 async function getDisciplineInternalAsync(
   year: number,
   course: number,
-  termType: TermType
+  termType: TermType,
+  isModule: boolean
 ) {
-  const paging = await requestApiJsonAsync<Paging<Discipline>>(
-    `/mvc/mobile/discipline/fetch?year=${year}&termType=${termType}&course=${course}&total=0&page=1&pageSize=100&search=`
-  );
-  return paging.content;
+  const queryString = `?year=${year}&termType=${termType}&course=${course}&total=0&page=1&pageSize=1000&search=`;
+  if (isModule) {
+    const disciplines = await requestApiJsonAsync<Discipline[]>(
+      '/mvc/mobile/module/fetch' + queryString
+    );
+    for (const d of disciplines) {
+      d.isModule = true;
+    }
+    return disciplines;
+  } else {
+    const paging = await requestApiJsonAsync<Paging<Discipline>>(
+      '/mvc/mobile/discipline/fetch' + queryString
+    );
+    const disciplines = paging.content;
+    for (const d of disciplines) {
+      d.isModule = false;
+    }
+    return disciplines;
+  }
 }
 
 export async function getAllStudentMarksAsync(discipline: Discipline) {
@@ -58,7 +80,9 @@ async function getStudentMarksAsync(
 ) {
   return getStudentMarksInternalAsync(
     discipline.disciplineLoad,
+    discipline.isModule,
     discipline.groupHistoryId,
+    discipline.groupId,
     cardType,
     markType
   );
@@ -66,14 +90,17 @@ async function getStudentMarksAsync(
 
 async function getStudentMarksInternalAsync(
   disciplineLoad: string,
-  groupHistoryId: string,
+  isModule: boolean,
+  groupUuid: string,
+  techgroup: string,
   cardType: CardType,
   markType: MarkType,
   isTotal: boolean = false,
   showActiveStudents: boolean = false
 ) {
+  const groupPart = isModule ? `techgroup=${techgroup}` : `groupUuid=${groupUuid}`;
   return requestApiJsonAsync<StudentMark[]>(
-    `/mvc/mobile/studentMarks/fetch?disciplineLoad=${disciplineLoad}&groupUuid=${groupHistoryId}` +
+    `/mvc/mobile/studentMarks/fetch?disciplineLoad=${disciplineLoad}&${groupPart}` +
       `&cardType=${cardType}&hasTest=false&isTotal=${isTotal}` +
       `&intermediate=${markType === 'intermediate'}` +
       `&selectedTeachers=null&showActiveStudents=${showActiveStudents}`
@@ -106,7 +133,7 @@ async function getControlActionsCachedAsync(
   cardType: CardType,
   markType: MarkType
 ) {
-  const cacheName = `${globalLogin}_getControlActions_${discipline.disciplineLoad}_${discipline.groupHistoryId}_${cardType}_${markType}`;
+  const cacheName = `${globalLogin}_getControlActions_${discipline.disciplineLoad}_${discipline.isModule}_${discipline.groupHistoryId}_${discipline.groupId}_${cardType}_${markType}`;
   const cacheResult = cache.read<ControlAction[]>(cacheName);
   if (cacheResult) {
     return cacheResult;
@@ -114,7 +141,9 @@ async function getControlActionsCachedAsync(
 
   const result = await getControlActionsInternalAsync(
     discipline.disciplineLoad,
+    discipline.isModule,
     discipline.groupHistoryId,
+    discipline.groupId,
     cardType,
     markType
   );
@@ -124,12 +153,16 @@ async function getControlActionsCachedAsync(
 
 async function getControlActionsInternalAsync(
   disciplineLoad: string,
-  groupHistoryId: string,
+  isModule: boolean,
+  groupUuid: string,
+  techgroup: string,
   cardType: CardType,
   markType: MarkType
 ) {
+  const modulePart = isModule ? '/module' : '';
+  const groupPart = isModule ? techgroup : groupUuid;
   const response = await requestApiAsync<string>(
-    `/mvc/mobile/view/mark/${disciplineLoad}/${groupHistoryId}/teachers/${cardType}/${markType}`
+    `/mvc/mobile/view/mark/${disciplineLoad}/${groupPart}/teachers${modulePart}/${cardType}/${markType}`
   );
 
   const prefix = 'gridColumns = toTextArray(';
@@ -144,12 +177,13 @@ async function getControlActionsInternalAsync(
     );
   }
 
-  const columns: Array<{ controlAction: string; uuid: string }> = JSON.parse(
-    linesWithId[0].substr(
-      prefix.length,
-      linesWithId[0].length - prefix.length - suffix.length
-    )
-  );
+  const columns: Array<{ controlAction: string; uuid: string }> =
+    JSON.parse(
+      linesWithId[0].substr(
+        prefix.length,
+        linesWithId[0].length - prefix.length - suffix.length
+      )
+    ) || [];
 
   const uuidPrefix = 'technologyCard';
   const result = columns
@@ -199,7 +233,9 @@ async function updateMarksAsync(
 ) {
   return updateMarksInternalAsync(
     discipline.disciplineLoad,
+    discipline.isModule,
     discipline.groupHistoryId,
+    discipline.groupId,
     cardType,
     markType
   );
@@ -207,17 +243,21 @@ async function updateMarksAsync(
 
 async function updateMarksInternalAsync(
   disciplineLoad: string,
-  groupHistoryId: string,
+  isModule: boolean,
+  groupUuid: string,
+  techgroup: string,
   cardType: CardType,
   markType: MarkType
 ) {
+  const modulePart = isModule ? '/module' : '';
+  const groupPart = isModule ? `techgroup=${techgroup}` : `groupUuid=${groupUuid}`;
   const body =
-    `disciplineLoad=${disciplineLoad}&groupUuid=${groupHistoryId}` +
+    `disciplineLoad=${disciplineLoad}&${groupPart}` +
     `&cardType=${cardType}&hasTest=false&isTotal=false` +
     `&intermediate=${markType === 'intermediate'}` +
     `&selectedTeachers=null&showActiveStudents=true`;
   return requestApiAsync<string>(
-    `/mvc/mobile/updateMarks`,
+    `/mvc/mobile/updateMarks${modulePart}`,
     {
       method: 'POST',
       body,
@@ -254,9 +294,9 @@ async function authAsync(login: string, password: string): Promise<string> {
     },
   });
 
-  const sessionCookie = response.headers['set-cookie'].filter(
-    (cookie: string) => cookie.startsWith('JSESSIONID=')
-  )[0];
+  const sessionCookie = response.headers[
+    'set-cookie'
+  ].filter((cookie: string) => cookie.startsWith('JSESSIONID='))[0];
   const sid = (sessionCookie as string)
     .split(';')[0]
     .substr('JSESSIONID='.length)
@@ -343,6 +383,7 @@ export interface Discipline {
   registerInfo: RegisterInfo[];
   disciplineLoad: string;
   groupHistoryId: string;
+  isModule: boolean;
 }
 
 const studentMarkSample: StudentMark = {

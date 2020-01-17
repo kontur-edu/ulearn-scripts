@@ -16,9 +16,7 @@ async function runSample() {
 }
 
 async function runCreateGroupsForSample() {
-  const groupNames = [
-    'КФ-180001-1',
-  ];
+  const groupNames = ['КФ-180001-1'];
   const courseId = 'basicprogramming';
   const reviewMode = 'all';
   await createGroupsAsync(courseId, groupNames, ['homework'], reviewMode);
@@ -30,7 +28,7 @@ async function runMoveStudentsForSample() {
       './data/students.csv',
       false,
       2,
-      0,
+      0
     );
     await moveStudentsAsync(
       'basicprogramming',
@@ -48,9 +46,7 @@ async function runUpdateScoresForSample() {
   const writeRange = 'ОП!A2:E';
   const updateTimeRange = 'ОП!G1';
   const courseId = 'basicprogramming';
-  const groupNames = [
-    'КФ-180001-1',
-  ];
+  const groupNames = ['КФ-180001-1'];
   const result = await updateScoresFromUlearnAsync(
     spreadsheetId,
     readRange,
@@ -70,9 +66,7 @@ async function runUpdateScoresComplexityForSample() {
   const writeRange = 'ОСА!A2:E';
   const updateTimeRange = 'ОСА!G1';
   const courseId = 'complexity';
-  const groupNames = [
-    'КФ-180001-1 (Пример)',
-  ];
+  const groupNames = ['КФ-180001-1 (Пример)'];
   const result = await updateScoresFromUlearnAsync(
     spreadsheetId,
     readRange,
@@ -91,14 +85,14 @@ async function runPutMarksForSample() {
     './data/students2.csv',
     true,
     1,
-    0,
+    0
   );
 
   // Подсказка: 0.Группа, 1.Фамилия и имя, 2.ЛР, 3.ДР1, 4.ДР2, 5.ДР3, 6.КР, 7.Экзамен
   const controlActionConfigs: ControlActionConfig[] = [
     {
       controlActions: ['Выполнение лабораторных работ и защита отчетов'],
-      propertyIndex: 2
+      propertyIndex: 2,
     }, // Практики и активности
     {
       controlActions: ['домашняя работа'],
@@ -110,21 +104,21 @@ async function runPutMarksForSample() {
       controlActions: ['домашняя работа'],
       matchIndex: 1,
       matchCount: 3,
-      propertyIndex: 4
+      propertyIndex: 4,
     }, // Упражнения
     {
       controlActions: ['домашняя работа'],
       matchIndex: 2,
       matchCount: 3,
-      propertyIndex: 5
+      propertyIndex: 5,
     }, // Упражнения
     {
       controlActions: ['контрольная работа'],
-      propertyIndex: 6
+      propertyIndex: 6,
     }, // Упражнения
     {
       controlActions: ['экзамен'],
-      propertyIndex: 7
+      propertyIndex: 7,
     }, // Экзамен
   ];
 
@@ -132,6 +126,7 @@ async function runPutMarksForSample() {
     'username-from-brs.json',
     actualStudents,
     'Крутой курс по программированию',
+    false,
     2018,
     1,
     TermType.Spring,
