@@ -125,6 +125,12 @@ export async function getAllControlActionsCachedAsync(discipline: Discipline) {
       'laboratory',
       'intermediate'
     )),
+    ...(await getControlActionsCachedAsync(discipline, 'practice', 'current')),
+    ...(await getControlActionsCachedAsync(
+      discipline,
+      'practice',
+      'intermediate'
+    )),
   ];
 }
 
@@ -353,7 +359,7 @@ export enum TermType {
   Spring = 2,
 }
 
-export type CardType = 'lecture' | 'laboratory';
+export type CardType = 'lecture' | 'laboratory' | 'practice';
 export type MarkType = 'intermediate' | 'current';
 
 interface Paging<T> {
