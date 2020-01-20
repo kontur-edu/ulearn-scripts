@@ -6,5 +6,8 @@
   "user2 pretty name": {
     "login": "user2 login",
     "password": "******"
+  },
+  "user3 pretty name": {
+    "sid": "******"
   }
 }

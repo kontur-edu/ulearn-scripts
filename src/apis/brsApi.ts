@@ -280,12 +280,15 @@ export async function authByConfigAsync(secretName: string) {
   const credentials = secrets[secretName] as {
     login: string;
     password: string;
+    sid: string; // содержимое Cookie JSSESSIONID, если sid задается, то все login и password не используются
   };
   if (!credentials) {
     throw new Error(`Secret ${secretName} not found`);
   }
-  globalSid = await authAsync(credentials.login, credentials.password);
-  globalLogin = credentials.login;
+  globalSid = credentials.sid
+    ? credentials.sid
+    : await authAsync(credentials.login, credentials.password);
+  globalLogin = credentials.sid ? secretName : credentials.login;
 }
 
 async function authAsync(login: string, password: string): Promise<string> {
