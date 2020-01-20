@@ -7,7 +7,11 @@ const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 const TOKENS_PATH = './secrets/google-tokens.json';
 const PROJECT_CONFIG_PATH = './secrets/google.json';
 
-export type AuthorizePolicy = 'always-new' | 'ask' | 'ask-if-not-saved' | 'only-saved';
+export type AuthorizePolicy =
+  | 'always-new'
+  | 'ask'
+  | 'ask-if-not-saved'
+  | 'only-saved';
 
 export async function authorizeAsync(policy: AuthorizePolicy) {
   const projectConfig = JSON.parse(

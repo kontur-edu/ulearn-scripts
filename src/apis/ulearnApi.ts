@@ -24,9 +24,11 @@ export async function getGroupAsync(groupId: number) {
 }
 
 export async function getGroupsAsync(courseId: string) {
-  return (await requestApiJsonAsync<{ groups: Group[] }>(
-    `/groups?course_id=${courseId}`
-  )).groups;
+  return (
+    await requestApiJsonAsync<{ groups: Group[] }>(
+      `/groups?course_id=${courseId}`
+    )
+  ).groups;
 }
 
 export async function postGroupAsync(courseId: string, groupName: string) {
@@ -53,11 +55,18 @@ export async function deleteGroupAsync(groupId: number) {
   });
 }
 
-export async function copyGroupAsync(groupId: number, destinationCourseId: string, makeMeOwner: boolean) {
-  return requestApiAsync<GroupPosted>(`/groups/${groupId}/copy?destination_course_id=${destinationCourseId}&make_me_owner=${makeMeOwner}`, {
-    method: 'POST',
-    json: true,
-  });
+export async function copyGroupAsync(
+  groupId: number,
+  destinationCourseId: string,
+  makeMeOwner: boolean
+) {
+  return requestApiAsync<GroupPosted>(
+    `/groups/${groupId}/copy?destination_course_id=${destinationCourseId}&make_me_owner=${makeMeOwner}`,
+    {
+      method: 'POST',
+      json: true,
+    }
+  );
 }
 
 export async function getGroupScoresAsync(groupId: number) {
@@ -78,9 +87,11 @@ export async function postGroupScoresAsync(
 }
 
 export async function getStudentsAsync(groupId: number) {
-  return (await requestApiJsonAsync<{ students: StudentToGet[] }>(
-    `/groups/${groupId}/students`
-  )).students.map(s => s.user);
+  return (
+    await requestApiJsonAsync<{ students: StudentToGet[] }>(
+      `/groups/${groupId}/students`
+    )
+  ).students.map(s => s.user);
 }
 
 export async function postStudentAsync(groupId: number, studentId: string) {

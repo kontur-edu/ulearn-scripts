@@ -27,7 +27,7 @@ export async function fromSpreadsheetAsync(
       result.push({
         fullName,
         groupName,
-        properties: row
+        properties: row,
       });
     }
   }
@@ -43,14 +43,17 @@ export function fromCvs(
   const rows = fileApi.readFromCsv(filePath, skipHeader, ',');
   const result = [];
   for (const row of rows) {
-      if (row.columns.length <= fullNameIndex || row.columns.length <= groupNameIndex) {
-        throw new Error(`Can't parse line of actual students file`);
-      }
-      result.push({
-        fullName: row.columns[fullNameIndex],
-        groupName: row.columns[groupNameIndex],
-        properties: row.columns,
-      });
+    if (
+      row.columns.length <= fullNameIndex ||
+      row.columns.length <= groupNameIndex
+    ) {
+      throw new Error(`Can't parse line of actual students file`);
+    }
+    result.push({
+      fullName: row.columns[fullNameIndex],
+      groupName: row.columns[groupNameIndex],
+      properties: row.columns,
+    });
   }
   return result;
 }

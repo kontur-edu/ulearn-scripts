@@ -40,8 +40,14 @@ async function copyGroupAsync(
   canStudentsSeeGroupProgress: boolean
 ): Promise<Group> {
   try {
-    const groupInfo = await ulearnApi.copyGroupAsync(exsistingGroup.id, destinationCourseId, makeMeOwner);
-    console.log(`Group '${exsistingGroup.name}' was copied to '${destinationCourseId}' with id=${groupInfo.id}`);
+    const groupInfo = await ulearnApi.copyGroupAsync(
+      exsistingGroup.id,
+      destinationCourseId,
+      makeMeOwner
+    );
+    console.log(
+      `Group '${exsistingGroup.name}' was copied to '${destinationCourseId}' with id=${groupInfo.id}`
+    );
 
     const patch = {
       isInviteLinkEnabled,

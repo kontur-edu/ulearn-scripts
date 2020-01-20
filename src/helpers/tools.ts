@@ -1,5 +1,5 @@
 export function fixSpaces(str: string) {
-  return str && str.replace(/[\s]/g,' ');
+  return str && str.replace(/[\s]/g, ' ');
 }
 
 export function compareFixed(s1: string, s2: string) {
