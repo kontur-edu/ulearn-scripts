@@ -137,13 +137,15 @@ async function putMarksForStudent(
     }
 
     const brsMark = parseAnyFloat(student.brs[controlAction.uuid] as string);
-    const actualMark = parseAnyFloat(student.actual.properties[config.propertyIndex]);
+    const actualMark = parseAnyFloat(
+      student.actual.properties[config.propertyIndex]
+    );
 
     if (actualMark === brsMark) {
-      marks.push(`  ${actualMark} `.substr(`${actualMark}`.length - 1));
+      marks.push(`    ${actualMark} `.substr(`${actualMark}`.length - 1));
       continue;
     } else {
-      marks.push(`  ${actualMark}!`.substr(`${actualMark}`.length - 1));
+      marks.push(`    ${actualMark}!`.substr(`${actualMark}`.length - 1));
     }
 
     try {
