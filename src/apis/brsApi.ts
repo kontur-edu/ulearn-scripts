@@ -9,11 +9,11 @@ let globalLogin: string = null;
 
 export async function getDisciplineCachedAsync(
   year: number,
-  course: number,
   termType: TermType,
+  course: number,
   isModule: boolean
 ) {
-  const cacheName = `${globalLogin}_getDiscipline_${year}_${course}_${termType}_${isModule}`;
+  const cacheName = `${globalLogin}_getDiscipline_${year}_${termType}_${course}_${isModule}`;
   const cacheResult = cache.read<Discipline[]>(cacheName);
   if (cacheResult) {
     return cacheResult;
@@ -21,8 +21,8 @@ export async function getDisciplineCachedAsync(
 
   const result = await getDisciplineInternalAsync(
     year,
-    course,
     termType,
+    course,
     isModule
   );
   cache.save(cacheName, result);
@@ -31,8 +31,8 @@ export async function getDisciplineCachedAsync(
 
 async function getDisciplineInternalAsync(
   year: number,
-  course: number,
   termType: TermType,
+  course: number,
   isModule: boolean
 ) {
   const queryString = `?year=${year}&termType=${termType}&course=${course}&total=0&page=1&pageSize=1000&search=`;
@@ -98,7 +98,9 @@ async function getStudentMarksInternalAsync(
   isTotal: boolean = false,
   showActiveStudents: boolean = false
 ) {
-  const groupPart = isModule ? `techgroup=${techgroup}` : `groupUuid=${groupUuid}`;
+  const groupPart = isModule
+    ? `techgroup=${techgroup}`
+    : `groupUuid=${groupUuid}`;
   return requestApiJsonAsync<StudentMark[]>(
     `/mvc/mobile/studentMarks/fetch?disciplineLoad=${disciplineLoad}&${groupPart}` +
       `&cardType=${cardType}&hasTest=false&isTotal=${isTotal}` +
@@ -256,7 +258,9 @@ async function updateMarksInternalAsync(
   markType: MarkType
 ) {
   const modulePart = isModule ? '/module' : '';
-  const groupPart = isModule ? `techgroup=${techgroup}` : `groupUuid=${groupUuid}`;
+  const groupPart = isModule
+    ? `techgroup=${techgroup}`
+    : `groupUuid=${groupUuid}`;
   const body =
     `disciplineLoad=${disciplineLoad}&${groupPart}` +
     `&cardType=${cardType}&hasTest=false&isTotal=false` +

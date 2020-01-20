@@ -1,8 +1,11 @@
 import { TermType } from './apis/brsApi';
 import createGroupsAsync from './createGroupsAsync';
 import moveStudentsAsync from './moveStudentsAsync';
-import putMarksToBrsAsync from './putMarksToBrsAsync';
-import { ControlActionConfig } from './putMarksToBrsAsync';
+import putMarksToBrsAsync, {
+  DisciplineConfig,
+  ControlActionConfig,
+} from './putMarksToBrsAsync';
+import putMarksToBrsAutoAsync from './putMarksToBrsAutoAsync';
 import * as readStudents from './readStudentsAsync';
 import updateScoresFromUlearnAsync from './updateScoresFromUlearnAsync';
 
@@ -122,15 +125,40 @@ async function runPutMarksForSample() {
     }, // Экзамен
   ];
 
+  const disciplineConfig = {
+    name: 'Крутой курс по программированию',
+    isModule: false,
+    year: 2018,
+    termType: TermType.Spring,
+    course: 1,
+  } as DisciplineConfig;
+
   await putMarksToBrsAsync(
     'username-from-brs.json',
     actualStudents,
-    'Крутой курс по программированию',
-    false,
-    2018,
-    1,
-    TermType.Spring,
+    disciplineConfig,
     controlActionConfigs,
     { save: true, verbose: true, justFirstGroup: false }
   );
+}
+
+async function runPutMarksAutoForSample() {
+  async function runPutMarksAuto() {
+    const secretName = 'username-from-brs.json';
+    // Пример таблицы для автоматической конфигурации
+    // https://docs.google.com/spreadsheets/d/1Owzl3JfmFASIdC7ZMMw-0kkA3pwFSab1QdVO5dhZoxY/edit?usp=sharing
+    const spreadsheetId = '1Owzl3JfmFASIdC7ZMMw-0kkA3pwFSab1QdVO5dhZoxY';
+    const sheetName = 'БРС';
+    await putMarksToBrsAutoAsync(
+      secretName,
+      spreadsheetId,
+      sheetName,
+      {
+        save: true,
+        verbose: true,
+        justFirstGroup: false,
+      },
+      student => true
+    );
+  }
 }

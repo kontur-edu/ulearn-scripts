@@ -1,43 +1,35 @@
 import * as brsApi from './apis/brsApi';
-import {
-  ControlAction,
-  Discipline,
-  StudentMark,
-  TermType
-} from './apis/brsApi';
-import {
-  parseAnyFloat,
-  compareFixed
-} from './helpers/tools';
+import { ControlAction, Discipline, StudentMark } from './apis/brsApi';
+import { parseAnyFloat, compareNormalized } from './helpers/tools';
 import * as fio from './helpers/fio';
 import { ActualStudent } from './readStudentsAsync';
 
 export default async function putMarksToBrsAsync(
   secretName: string,
   actualStudents: ActualStudent[],
-  disciplineName: string,
-  isModuleDiscipline: boolean,
-  year: number,
-  course: number,
-  termType: TermType,
+  disciplineConfig: DisciplineConfig,
   controlActionConfigs: ControlActionConfig[],
   options: PutMarksOptions
 ) {
   try {
     await brsApi.authByConfigAsync(secretName);
 
-    const allDisciplines = (await brsApi.getDisciplineCachedAsync(
-      year,
-      course,
-      termType,
-      isModuleDiscipline
-    ))
-    const disciplines = allDisciplines.filter(d => compareFixed(d.discipline, disciplineName));
+    const allDisciplines = await brsApi.getDisciplineCachedAsync(
+      disciplineConfig.year,
+      disciplineConfig.termType,
+      disciplineConfig.course,
+      disciplineConfig.isModule
+    );
+    const disciplines = allDisciplines.filter(d =>
+      compareNormalized(d.discipline, disciplineConfig.name)
+    );
 
     for (const discipline of disciplines) {
       await putMarksForDisciplineAsync(
         discipline,
-        actualStudents.filter(s => compareFixed(s.groupName, discipline.group)),
+        actualStudents.filter(s =>
+          compareNormalized(s.groupName, discipline.group)
+        ),
         controlActionConfigs,
         options
       );
@@ -187,7 +179,7 @@ function getSuitableControlAction(
   controlActions: ControlAction[]
 ) {
   const suitableControlActions = controlActions.filter(a =>
-    config.controlActions.some(b => a.controlAction === b)
+    config.controlActions.some(b => compareNormalized(a.controlAction, b))
   );
 
   if (suitableControlActions.length === 0) {
@@ -287,6 +279,14 @@ function logMergedStudents(
   for (const s of skippedBrsStudents) {
     console.log('- ' + s.studentFio);
   }
+}
+
+export interface DisciplineConfig {
+  name: string;
+  year: number;
+  termType: number;
+  course: number;
+  isModule: boolean;
 }
 
 export interface ControlActionConfig {
