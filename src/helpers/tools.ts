@@ -8,7 +8,7 @@ export function normalizeString(str: string) {
     str
       .toLowerCase()
       .replace('ё', 'е')
-      .replace(/[^A-Za-zА-ЯЁа-яё0-1]/g, '')
+      .replace(/[^A-Za-zА-ЯЁа-яё0-9]/g, '')
   );
 }
 
