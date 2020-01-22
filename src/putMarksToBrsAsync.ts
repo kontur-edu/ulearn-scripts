@@ -1,5 +1,10 @@
 import * as brsApi from './apis/brsApi';
-import { ControlAction, Discipline, StudentMark } from './apis/brsApi';
+import {
+  ControlAction,
+  Discipline,
+  StudentMark,
+  StudentFailure,
+} from './apis/brsApi';
 import { parseAnyFloat, compareNormalized } from './helpers/tools';
 import * as fio from './helpers/fio';
 import { ActualStudent } from './readStudentsAsync';
@@ -20,8 +25,11 @@ export default async function putMarksToBrsAsync(
       disciplineConfig.course,
       disciplineConfig.isModule
     );
-    const disciplines = allDisciplines.filter(d =>
-      compareNormalized(d.discipline, disciplineConfig.name)
+    const disciplines = allDisciplines.filter(
+      d =>
+        compareNormalized(d.discipline, disciplineConfig.name) &&
+        (!disciplineConfig.isSuitableDiscipline ||
+          disciplineConfig.isSuitableDiscipline(d))
     );
 
     for (const discipline of disciplines) {
@@ -67,16 +75,24 @@ async function putMarksForDisciplineAsync(
   logMergedStudents(mergedStudents, skippedActualStudents, skippedBrsStudents);
   console.log();
 
-  await putMarksForStudents(
+  await putMarksForStudentsAsync(
     mergedStudents,
     controlActionConfigs,
     controlActions,
     options
   );
+  console.log();
+
+  await updateFailuresForSkippedStudentsAsync(
+    skippedBrsStudents,
+    discipline,
+    options
+  );
+  console.log();
+
   if (options.save) {
     await brsApi.updateAllMarksAsync(discipline);
   }
-  console.log();
 
   console.log();
 }
@@ -93,7 +109,7 @@ function checkControlActionsConfiguration(
   return true;
 }
 
-async function putMarksForStudents(
+async function putMarksForStudentsAsync(
   students: MergedStudent[],
   controlActionConfigs: ControlActionConfig[],
   controlActions: ControlAction[],
@@ -102,7 +118,7 @@ async function putMarksForStudents(
   const statusCounters: { [k: string]: number } = {};
 
   for (const student of students) {
-    const status = await putMarksForStudent(
+    const status = await putMarksForStudentAsync(
       student,
       controlActionConfigs,
       controlActions,
@@ -114,13 +130,13 @@ async function putMarksForStudents(
     statusCounters[status]++;
   }
 
-  console.log('Group statuses:');
+  console.log('Marks update statuses:');
   for (const k of Object.keys(statusCounters)) {
     console.log(`- ${k} = ${statusCounters[k]}`);
   }
 }
 
-async function putMarksForStudent(
+async function putMarksForStudentAsync(
   student: MergedStudent,
   controlActionConfigs: ControlActionConfig[],
   controlActions: ControlAction[],
@@ -225,13 +241,76 @@ function getSuitableControlAction(
   return suitableControlActions[0];
 }
 
+async function updateFailuresForSkippedStudentsAsync(
+  students: StudentMark[],
+  discipline: Discipline,
+  options: PutMarksOptions
+) {
+  if (options.failureForSkipped === false) {
+    return;
+  }
+
+  const statusCounters: { [k: string]: number } = {};
+
+  for (const student of students) {
+    const status = await updateFailureForStudent(student, discipline, options);
+    if (statusCounters[status] === undefined) {
+      statusCounters[status] = 0;
+    }
+    statusCounters[status]++;
+  }
+
+  console.log('Failures update statuses:');
+  for (const k of Object.keys(statusCounters)) {
+    console.log(`- ${k} = ${statusCounters[k]}`);
+  }
+}
+
+async function updateFailureForStudent(
+  student: StudentMark,
+  discipline: Discipline,
+  options: PutMarksOptions
+) {
+  let status = '';
+  const brsFailureStatus = student.failure
+    ? (student.failure as StudentFailure)
+    : StudentFailure.NoFailure;
+  const actualFailure = options.failureForSkipped as StudentFailure;
+  if (actualFailure === brsFailureStatus) {
+    status = 'SKIPPED';
+  } else {
+    try {
+      if (options.save) {
+        await brsApi.putStudentFailureAsync(
+          student.studentUuid,
+          discipline,
+          actualFailure
+        );
+      }
+      status = 'UPDATED';
+    } catch (error) {
+      status = 'FAILED';
+    }
+  }
+
+  if (options.verbose || status === 'FAILED') {
+    const studentName = (
+      student.studentFio + '                              '
+    ).substr(0, 30);
+    const description =
+      status !== 'SKIPPED'
+        ? `${StudentFailure[actualFailure]} from ${StudentFailure[brsFailureStatus]}`
+        : StudentFailure[actualFailure];
+    console.log(`${status} ${studentName} ${description}`);
+  }
+  return status;
+}
+
 function mergeStudents(
   actualStudents: ActualStudent[],
   brsStudents: StudentMark[]
 ) {
-  const activeBrsStudents = brsStudents.filter(
-    s => s.studentStatus !== 'Переведен'
-  );
+  const activeBrsStudents = brsStudents.filter(isStudentActive);
 
   const mergedStudents: MergedStudent[] = [];
   const skippedActualStudents: ActualStudent[] = [];
@@ -256,6 +335,13 @@ function mergeStudents(
   }
 
   return { mergedStudents, skippedActualStudents, skippedBrsStudents };
+}
+
+function isStudentActive(brsStudent: StudentMark) {
+  return (
+    brsStudent.studentStatus !== 'Переведен' &&
+    brsStudent.studentStatus !== 'Отчислен'
+  );
 }
 
 function areStudentsLike(
@@ -289,6 +375,7 @@ export interface DisciplineConfig {
   termType: number;
   course: number;
   isModule: boolean;
+  isSuitableDiscipline?: (d: Discipline) => boolean;
 }
 
 export interface ControlActionConfig {
@@ -302,6 +389,7 @@ export interface PutMarksOptions {
   save: boolean;
   verbose: boolean;
   justFirstGroup: boolean;
+  failureForSkipped: StudentFailure | false;
 }
 
 interface MergedStudent {

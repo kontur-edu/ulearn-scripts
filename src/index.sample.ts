@@ -138,7 +138,12 @@ async function runPutMarksForSample() {
     actualStudents,
     disciplineConfig,
     controlActionConfigs,
-    { save: true, verbose: true, justFirstGroup: false }
+    {
+      save: true,
+      verbose: true,
+      justFirstGroup: false,
+      failureForSkipped: false,
+    }
   );
 }
 
@@ -156,6 +161,7 @@ async function runPutMarksAutoForSample() {
       save: true,
       verbose: true,
       justFirstGroup: false,
+      failureForSkipped: false,
     },
     student => true
   );

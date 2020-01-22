@@ -1,4 +1,4 @@
-import { TermType } from './apis/brsApi';
+import { TermType, Discipline } from './apis/brsApi';
 import putMarksToBrsAsync, {
   DisciplineConfig,
   ControlActionConfig,
@@ -17,7 +17,8 @@ export default async function putMarksAutoAsync(
   spreadsheetId: string,
   sheetName: string,
   options: PutMarksOptions,
-  isSuitableActualStudent: (student: ActualStudent) => boolean = () => true,
+  isSuitableDiscipline: (d: Discipline) => boolean = null,
+  isSuitableActualStudent: (s: ActualStudent) => boolean = null,
   authorizePolicy: AuthorizePolicy = 'ask-if-not-saved'
 ) {
   const header = await readHeaderFromSpreadsheetAsync(
@@ -29,7 +30,11 @@ export default async function putMarksAutoAsync(
   const indices = buildIndicesBy(header);
   const dataRange = buildDataRange(sheetName, indices);
   const controlActionConfigs = buildControlActionConfig(header, indices);
-  const disciplineConfig = buildDisciplineConfig(header, indices);
+  const disciplineConfig = buildDisciplineConfig(
+    header,
+    indices,
+    isSuitableDiscipline
+  );
 
   const allActualStudents = await readStudents.fromSpreadsheetAsync(
     spreadsheetId,
@@ -38,7 +43,9 @@ export default async function putMarksAutoAsync(
     indices.groupColumn - indices.left,
     authorizePolicy
   );
-  const actualStudents = allActualStudents.filter(isSuitableActualStudent);
+  const actualStudents = isSuitableActualStudent
+    ? allActualStudents.filter(isSuitableActualStudent)
+    : allActualStudents;
 
   await putMarksToBrsAsync(
     secretName,
@@ -147,7 +154,11 @@ function buildControlActionConfig(header: string[], indices: Indices) {
   return controlActionConfigs;
 }
 
-function buildDisciplineConfig(header: string[], indices: Indices) {
+function buildDisciplineConfig(
+  header: string[],
+  indices: Indices,
+  isSuitableDiscipline: (d: Discipline) => boolean
+) {
   const result = {} as DisciplineConfig;
   for (const part of header[indices.diciplineColumn].split(';')) {
     const keyValue = part.split(':').map(p => p.trim());
@@ -169,6 +180,7 @@ function buildDisciplineConfig(header: string[], indices: Indices) {
       result.course = parseInt(value.toLowerCase(), 10);
     }
   }
+  result.isSuitableDiscipline = isSuitableDiscipline;
 
   return result;
 }

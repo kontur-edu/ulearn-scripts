@@ -225,6 +225,26 @@ export async function putStudentMarkAsync(
   );
 }
 
+export async function putStudentFailureAsync(
+  studentUuid: string,
+  discipline: Discipline,
+  studentFailure: StudentFailure = StudentFailure.NoFailure,
+  cardType: CardType = 'lecture'
+) {
+  const body = `markFailure=${studentFailure}&cardType=${cardType}&disciplineLoad=${discipline.disciplineLoad}&studentId=${studentUuid}`;
+  await requestApiAsync(
+    `/mvc/mobile/failure/update`,
+    {
+      method: 'POST',
+      body,
+      json: false,
+    },
+    {
+      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+    }
+  );
+}
+
 export async function updateAllMarksAsync(discipline: Discipline) {
   // Одного вызова достаточно, чтобы обновить все оценки по предмету у группы.
   await updateMarksAsync(discipline, 'lecture', 'intermediate');
@@ -232,6 +252,8 @@ export async function updateAllMarksAsync(discipline: Discipline) {
   // await updateMarksAsync(discipline, 'lecture', 'intermediate');
   // await updateMarksAsync(discipline, 'laboratory', 'current');
   // await updateMarksAsync(discipline, 'laboratory', 'intermediate');
+  // await updateMarksAsync(discipline, 'practice', 'current');
+  // await updateMarksAsync(discipline, 'practice', 'intermediate');
 }
 
 async function updateMarksAsync(
@@ -434,6 +456,8 @@ export interface StudentMark {
   registerClosed: boolean;
   subgroupsITS: string;
   disciplineLoad: string;
+  failure?: StudentFailure;
+  failureName?: string;
   [props: string]: number | string | boolean;
 }
 
@@ -441,4 +465,17 @@ export interface ControlAction {
   uuid: string;
   uuidWithoutPrefix: string;
   controlAction: string;
+}
+
+export enum StudentFailure {
+  /** -, дефис, все хорошо */ NoFailure = -1,
+  /** Не выбрана */ NotChosen = -19,
+  /** Не допущен (деканат) */ NotAllowedByDeansOffice = -18,
+  /** Не явился */ NotAppeared = 0,
+  /** Неуважительная */ DisrespectfulReason = 12,
+  /** Уважительная */ RespectfulReason = 13,
+  /** Не допущен */ NotAllowedByTeacher = 18,
+  /** Не должен сдавать */ ShouldNotPass = 19,
+  /** Академический отпуск */ AcademicLeave = 20,
+  /** Выбыл */ DroppedOut = 21,
 }
