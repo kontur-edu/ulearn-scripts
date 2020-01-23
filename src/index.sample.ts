@@ -163,6 +163,6 @@ async function runPutMarksAutoForSample() {
       justFirstGroup: false,
       failureForSkipped: false,
     },
-    student => true
+    discipline => discipline.group !== 'BAD-140934'
   );
 }
