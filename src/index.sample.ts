@@ -36,7 +36,9 @@ async function runMoveStudentsForSample() {
     await moveStudentsAsync(
       'basicprogramming',
       'Регистрация КрутойФакультет, 2018',
-      actualStudents
+      actualStudents, {
+        verbosity: 'all'
+      }
     );
   } catch (e) {
     console.log(e);

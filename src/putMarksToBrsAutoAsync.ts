@@ -41,6 +41,7 @@ export default async function putMarksAutoAsync(
     dataRange,
     indices.fullNameColumn - indices.left,
     indices.groupColumn - indices.left,
+    null,
     authorizePolicy
   );
   const actualStudents = isSuitableActualStudent

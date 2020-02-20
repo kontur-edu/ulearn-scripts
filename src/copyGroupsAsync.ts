@@ -1,10 +1,11 @@
 import * as ulearnApi from './apis/ulearnApi';
-import { Group } from './apis/ulearnApi';
+import { Group, GroupPatch } from './apis/ulearnApi';
 
 export default async function copyGroupsAsync(
   courseId: string,
   groupNames: string[],
   destinationCourseId: string,
+  renameGroup: (from: string) => string,
   makeMeOwner: boolean,
   scoringGroups: ulearnApi.ScoringGroup[],
   reviewMode: ReviewMode = 'perfect',
@@ -18,6 +19,7 @@ export default async function copyGroupsAsync(
       await copyGroupAsync(
         existingGroup,
         destinationCourseId,
+        renameGroup,
         makeMeOwner,
         scoringGroups,
         reviewMode,
@@ -31,8 +33,9 @@ export default async function copyGroupsAsync(
 }
 
 async function copyGroupAsync(
-  exsistingGroup: Group,
+  existingGroup: Group,
   destinationCourseId: string,
+  renameGroup: (from: string) => string,
   makeMeOwner: boolean,
   scoringGroups: ulearnApi.ScoringGroup[],
   reviewMode: ReviewMode,
@@ -41,15 +44,15 @@ async function copyGroupAsync(
 ): Promise<Group> {
   try {
     const groupInfo = await ulearnApi.copyGroupAsync(
-      exsistingGroup.id,
+      existingGroup.id,
       destinationCourseId,
       makeMeOwner
     );
     console.log(
-      `Group '${exsistingGroup.name}' was copied to '${destinationCourseId}' with id=${groupInfo.id}`
+      `Group '${existingGroup.name}' was copied to '${destinationCourseId}' with id=${groupInfo.id}`
     );
 
-    const patch = {
+    const patch: GroupPatch = {
       isInviteLinkEnabled,
       isManualCheckingEnabled: reviewMode !== 'no',
       isManualCheckingEnabledForOldSolutions:
@@ -58,16 +61,21 @@ async function copyGroupAsync(
         reviewMode !== 'continuous' && reviewMode !== 'all',
       canStudentsSeeGroupProgress,
     };
+    let newGroupName = existingGroup.name;
+    if (renameGroup) {
+      newGroupName = renameGroup(existingGroup.name);
+      patch.name = newGroupName;
+    }
     const group = await ulearnApi.patchGroupAsync(groupInfo.id, patch);
 
     await ulearnApi.postGroupScoresAsync(group.id, scoringGroups);
 
-    console.log(`    and was configured`);
+    console.log(`    and was configured with name ${newGroupName}`);
 
     return group;
   } catch (e) {
     console.log(
-      `An error occured while creating or configuring group '${exsistingGroup.name}'...`
+      `An error occured while creating or configuring group '${existingGroup.name}'...`
     );
     return null;
   }
