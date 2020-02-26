@@ -7,16 +7,17 @@ import moveStudentAsync, { MoveStudentOptions } from './moveStudentAsync';
 export default async function moveAllStudentsAsync(
   courseId: string,
   actualStudents: ActualStudent[],
-  additionalSourceGroupNames: string[],
+  additionalSourceGroupInfos: { courseId: string; groupName: string }[],
   options: MoveStudentOptions
 ) {
-  const ulearnGroups = await ulearnApi.getGroupsAsync(courseId);
-  const targetGroups = findTargetGroups(ulearnGroups, actualStudents);
-  const sourceGroups = findSourceGroups(
-    ulearnGroups,
-    targetGroups,
-    additionalSourceGroupNames
+  const courseGroups = await ulearnApi.getGroupsAsync(courseId);
+  const targetGroups = findTargetGroups(courseGroups, actualStudents);
+  const additionalSourceGroups = await findAdditionalGroupsAsync(
+    courseId,
+    courseGroups,
+    additionalSourceGroupInfos
   );
+  const sourceGroups = mergeGroups(targetGroups, additionalSourceGroups);
 
   for (const sourceGroup of sourceGroups) {
     await moveStudentsFrom(sourceGroup, targetGroups, actualStudents, options);
@@ -42,7 +43,7 @@ async function moveStudentsFrom(
 }
 
 function findTargetGroups(
-  ulearnGroups: Group[],
+  courseGroups: Group[],
   actualStudents: ActualStudent[]
 ) {
   const actualGroups: { [groupName: string]: boolean } = {};
@@ -50,23 +51,35 @@ function findTargetGroups(
     actualGroups[student.groupName] = true;
   }
   return Object.keys(actualGroups).map(groupName =>
-    findGroupByName(ulearnGroups, groupName)
+    findGroupByName(courseGroups, groupName)
   );
 }
 
-function findSourceGroups(
-  ulearnGroups: Group[],
-  targetGroups: Group[],
-  sourceGroupNames: string[]
-): Group[] {
-  const groups: { [id: string]: Group } = {};
-  for (const g of targetGroups) {
-    groups[g.id] = g;
+async function findAdditionalGroupsAsync(
+  courseId: string,
+  courseGroups: Group[],
+  additionalGroups: { courseId: string; groupName: string }[]
+): Promise<Group[]> {
+  let result: Group[] = [];
+  for (const additionalGroup of additionalGroups) {
+    const groups =
+      additionalGroup.courseId === courseId
+        ? courseGroups
+        : await ulearnApi.getGroupsAsync(additionalGroup.courseId);
+    result = result.concat(
+      groups.filter(g => g.name === additionalGroup.groupName)
+    );
   }
-  for (const groupName of sourceGroupNames) {
-    const g = findGroupByName(ulearnGroups, groupName);
-    groups[g.id] = g;
-  }
+  return result;
+}
 
+function mergeGroups(groups1: Group[], groups2: Group[]): Group[] {
+  const groups: { [id: string]: Group } = {};
+  for (const g of groups1) {
+    groups[g.id] = g;
+  }
+  for (const g of groups2) {
+    groups[g.id] = g;
+  }
   return Object.keys(groups).map(id => groups[id]);
 }
