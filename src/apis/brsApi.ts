@@ -133,6 +133,16 @@ export async function getAllControlActionsCachedAsync(discipline: Discipline) {
       'practice',
       'intermediate'
     )),
+    ...(await getControlActionsCachedAsync(
+      discipline,
+      'additionalPractice',
+      'current'
+    )),
+    ...(await getControlActionsCachedAsync(
+      discipline,
+      'additionalPractice',
+      'intermediate'
+    )),
   ];
 }
 
@@ -346,7 +356,7 @@ async function requestApiJsonAsync<T>(
 ): Promise<T> {
   const response = await requestApiAsync<string>(uri, options, headers);
   if (response.trimLeft().startsWith('<!DOCTYPE html>')) {
-    throw new Error('Forbidden');
+    throw new Error(uri + ' is Forbidden');
   }
   return JSON.parse(response);
 }
@@ -388,7 +398,7 @@ export enum TermType {
   Spring = 2,
 }
 
-export type CardType = 'lecture' | 'laboratory' | 'practice';
+export type CardType = 'lecture' | 'laboratory' | 'practice' | 'additionalPractice';
 export type MarkType = 'intermediate' | 'current';
 
 interface Paging<T> {
