@@ -56,6 +56,8 @@ async function putMarksForDisciplineAsync(
   controlActionConfigs: ControlActionConfig[],
   options: PutMarksOptions
 ) {
+  if (actualStudents.length === 0)
+    return;
   console.log(`# Processing group ${discipline.group}`);
   console.log();
 
@@ -76,6 +78,7 @@ async function putMarksForDisciplineAsync(
   console.log();
 
   await putMarksForStudentsAsync(
+    discipline,
     mergedStudents,
     controlActionConfigs,
     controlActions,
@@ -110,6 +113,7 @@ function checkControlActionsConfiguration(
 }
 
 async function putMarksForStudentsAsync(
+  discipline: Discipline,
   students: MergedStudent[],
   controlActionConfigs: ControlActionConfig[],
   controlActions: ControlAction[],
@@ -119,6 +123,7 @@ async function putMarksForStudentsAsync(
 
   for (const student of students) {
     const status = await putMarksForStudentAsync(
+      discipline,
       student,
       controlActionConfigs,
       controlActions,
@@ -137,6 +142,7 @@ async function putMarksForStudentsAsync(
 }
 
 async function putMarksForStudentAsync(
+  discipline: Discipline,
   student: MergedStudent,
   controlActionConfigs: ControlActionConfig[],
   controlActions: ControlAction[],
@@ -169,7 +175,10 @@ async function putMarksForStudentAsync(
         await brsApi.putStudentMarkAsync(
           student.brs.studentUuid,
           controlAction.uuidWithoutPrefix,
-          actualMark
+          actualMark, 
+          discipline.groupHistoryId,
+          student.brs.cardType,
+          student.brs.disciplineLoad
         );
       }
       updated++;

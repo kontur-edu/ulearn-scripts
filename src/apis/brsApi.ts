@@ -217,11 +217,14 @@ async function getControlActionsInternalAsync(
 export async function putStudentMarkAsync(
   studentUuid: string,
   controlActionId: string,
-  mark: number
+  mark: number,
+  groupId: string,
+  cardTypeKey: CardType,
+  disciplineLoadUuid: string
 ) {
   const body = `student=${studentUuid}&techcard=${controlActionId}&mark=${
     isNaN(mark) ? '' : mark.toString()
-  }`;
+  }&groupId=${groupId}&cardTypeKey=${cardTypeKey}&disciplineLoadUuid=${disciplineLoadUuid}`;
   return requestApiJsonAsync<StudentMark>(
     `/mvc/mobile/studentMarks/put`,
     {
