@@ -163,7 +163,7 @@ async function putMarksForStudentAsync(
       student.actual.properties[config.propertyIndex]
     );
 
-    if (actualMark === brsMark) {
+    if (actualMark === brsMark || actualMark === 0) {
       marks.push(`    ${actualMark} `.substr(`${actualMark}`.length - 1));
       continue;
     } else {
