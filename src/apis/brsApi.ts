@@ -332,9 +332,9 @@ export async function authByConfigAsync(secretName: string) {
 
 async function authAsync(login: string, password: string): Promise<string> {
   const response = await request({
-    url: baseUrl + `/j_spring_security_check`,
+    url: baseUrl + `/login`,
     method: 'POST',
-    body: `j_username=${login}&j_password=${password}`,
+    body: `username=${login}&password=${password}`,
     resolveWithFullResponse: true,
     simple: false,
     headers: {
