@@ -34,7 +34,7 @@ export default async function updateScoresFromUlearn(
     writeRange,
     studentScores
   );
-  sheet.writeAsync(updateTimeRange, [[new Date().toLocaleString()]]);
+  await sheet.writeAsync(updateTimeRange, [[new Date().toLocaleString()]]);
   return result;
 }
 
