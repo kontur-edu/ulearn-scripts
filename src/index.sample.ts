@@ -142,7 +142,6 @@ async function runPutMarksForSample() {
     {
       save: true,
       verbose: true,
-      justFirstGroup: false,
       failureForSkipped: false,
     }
   );
@@ -161,7 +160,6 @@ async function runPutMarksAutoForSample() {
     {
       save: true,
       verbose: true,
-      justFirstGroup: false,
       failureForSkipped: false,
     },
     (discipline) => discipline.group !== 'BAD-140934'
