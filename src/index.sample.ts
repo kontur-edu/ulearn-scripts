@@ -1,10 +1,10 @@
 import { TermType } from './apis/brsApi';
 import createGroupsAsync from './createGroupsAsync';
 import moveStudentsAsync from './moveStudentsAsync';
-import putMarksToBrsAsync, {
+import putMarksToBrsManualAsync, {
   DisciplineConfig,
   ControlActionConfig,
-} from './putMarksToBrsAsync';
+} from './putMarksToBrsManualAsync';
 import putMarksToBrsAutoAsync from './putMarksToBrsAutoAsync';
 import * as readStudents from './readStudentsAsync';
 import updateScoresFromUlearnAsync from './updateScoresFromUlearnAsync';
@@ -36,8 +36,9 @@ async function runMoveStudentsForSample() {
     await moveStudentsAsync(
       'basicprogramming',
       'Регистрация КрутойФакультет, 2018',
-      actualStudents, {
-        verbosity: 'all'
+      actualStudents,
+      {
+        verbosity: 'all',
       }
     );
   } catch (e) {
@@ -135,11 +136,9 @@ async function runPutMarksForSample() {
     course: 1,
   } as DisciplineConfig;
 
-  await putMarksToBrsAsync(
+  await putMarksToBrsManualAsync(
     'username-from-brs.json',
-    actualStudents,
-    disciplineConfig,
-    controlActionConfigs,
+    { actualStudents, disciplineConfig, controlActionConfigs },
     {
       save: true,
       verbose: true,
@@ -165,6 +164,6 @@ async function runPutMarksAutoForSample() {
       justFirstGroup: false,
       failureForSkipped: false,
     },
-    discipline => discipline.group !== 'BAD-140934'
+    (discipline) => discipline.group !== 'BAD-140934'
   );
 }

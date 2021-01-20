@@ -10,43 +10,36 @@ import * as fio from './helpers/fio';
 import { ActualStudent } from './readStudentsAsync';
 
 export default async function putMarksToBrsAsync(
-  secretName: string,
-  actualStudents: ActualStudent[],
-  disciplineConfig: DisciplineConfig,
-  controlActionConfigs: ControlActionConfig[],
+  marksData: MarksData,
   options: PutMarksOptions
 ) {
-  try {
-    await brsApi.authByConfigAsync(secretName);
+  const {actualStudents, disciplineConfig, controlActionConfigs} = marksData;
 
-    const allDisciplines = await brsApi.getDisciplineCachedAsync(
-      disciplineConfig.year,
-      disciplineConfig.termType,
-      disciplineConfig.course,
-      disciplineConfig.isModule
-    );
-    const disciplines = allDisciplines.filter(
-      d =>
-        compareNormalized(d.discipline, disciplineConfig.name) &&
-        (!disciplineConfig.isSuitableDiscipline ||
-          disciplineConfig.isSuitableDiscipline(d))
-    );
+  const allDisciplines = await brsApi.getDisciplineCachedAsync(
+    disciplineConfig.year,
+    disciplineConfig.termType,
+    disciplineConfig.course,
+    disciplineConfig.isModule
+  );
+  const disciplines = allDisciplines.filter(
+    d =>
+      compareNormalized(d.discipline, disciplineConfig.name) &&
+      (!disciplineConfig.isSuitableDiscipline ||
+        disciplineConfig.isSuitableDiscipline(d))
+  );
 
-    for (const discipline of disciplines) {
-      await putMarksForDisciplineAsync(
-        discipline,
-        actualStudents.filter(s =>
-          compareNormalized(s.groupName, discipline.group)
-        ),
-        controlActionConfigs,
-        options
-      );
-      if (options.justFirstGroup) {
-        break;
-      }
+  for (const discipline of disciplines) {
+    await putMarksForDisciplineAsync(
+      discipline,
+      actualStudents.filter(s =>
+        compareNormalized(s.groupName, discipline.group)
+      ),
+      controlActionConfigs,
+      options
+    );
+    if (options.justFirstGroup) {
+      break;
     }
-  } catch (e) {
-    console.log(e);
   }
 }
 
@@ -376,6 +369,12 @@ function logMergedStudents(
   for (const s of skippedBrsStudents) {
     console.log('- ' + s.studentFio);
   }
+}
+
+export interface MarksData {
+  actualStudents: ActualStudent[];
+  disciplineConfig: DisciplineConfig;
+  controlActionConfigs: ControlActionConfig[];
 }
 
 export interface DisciplineConfig {
