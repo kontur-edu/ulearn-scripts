@@ -9,7 +9,7 @@ import { ActualStudent } from './readStudentsAsync';
 import * as googleApi from './apis/googleApi';
 import { normalizeString, compareNormalized } from './helpers/tools';
 
-export default async function buildMarksAutoAsync(
+export default async function buildAutoMarksConfigAsync(
   spreadsheetId: string,
   sheetName: string,
   isSuitableDiscipline: ((d: Discipline) => boolean) | null = null,

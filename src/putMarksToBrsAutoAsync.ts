@@ -5,7 +5,7 @@ import putMarksToBrsAsync, {
   ControlActionConfig,
   MarksData,
 } from './putMarksToBrsAsync';
-import buildMarksAutoAsync from './buildMarksAutoAsync';
+import buildAutoMarksConfigAsync from './buildAutoMarksConfigAsync';
 import { ActualStudent } from './readStudentsAsync';
 import * as googleApi from './apis/googleApi';
 import { AuthorizePolicy } from './apis/googleAuth';
@@ -23,7 +23,7 @@ export default async function putMarksAutoAsync(
 ) {
   await googleApi.authorizeAsync(authorizePolicy);
 
-  const marksData = await buildMarksAutoAsync(
+  const marksData = await buildAutoMarksConfigAsync(
     spreadsheetId,
     sheetName,
     isSuitableDiscipline,
