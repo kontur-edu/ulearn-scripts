@@ -165,7 +165,7 @@ function buildControlActionConfig(header: string[], indices: Indices) {
 function buildDisciplineConfig(
   rows: string[][],
   indices: Indices,
-  isSuitableDiscipline: (d: Discipline) => boolean
+  isSuitableDiscipline: ((d: Discipline) => boolean) | null
 ) {
   const result: DisciplineConfig = {
     name: '',
@@ -174,6 +174,7 @@ function buildDisciplineConfig(
     course: 1,
     isModule: false,
     defaultStudentFailure: StudentFailure.NoFailure,
+    isSuitableDiscipline: null,
   };
 
   for (let i = 0; i < rows.length; i++) {

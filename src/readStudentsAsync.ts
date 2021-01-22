@@ -6,8 +6,8 @@ import { parseStudentFailure } from './helpers/brsHelpers';
 export interface ActualStudent {
   fullName: string;
   groupName: string;
-  id: string;
-  failure?: StudentFailure;
+  id: string | null;
+  failure: StudentFailure | null;
   properties: string[];
 }
 

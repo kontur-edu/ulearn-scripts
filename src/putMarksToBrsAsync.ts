@@ -58,5 +58,5 @@ export interface DisciplineConfig {
   course: number;
   isModule: boolean;
   defaultStudentFailure: StudentFailure;
-  isSuitableDiscipline?: (d: Discipline) => boolean;
+  isSuitableDiscipline: ((d: Discipline) => boolean) | null;
 }
