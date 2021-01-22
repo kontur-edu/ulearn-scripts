@@ -1,5 +1,5 @@
 import * as brsApi from './apis/brsApi';
-import { Discipline } from './apis/brsApi';
+import { Discipline, StudentFailure } from './apis/brsApi';
 import putMarksForDisciplineAsync, {
   PutMarksOptions,
   ControlActionConfig,
@@ -22,6 +22,7 @@ export default async function putMarksToBrsAsync(
       actualStudents.filter((s) =>
         compareNormalized(s.groupName, discipline.group)
       ),
+      disciplineConfig.defaultStudentFailure,
       controlActionConfigs,
       options
     );
@@ -56,5 +57,6 @@ export interface DisciplineConfig {
   termType: number;
   course: number;
   isModule: boolean;
+  defaultStudentFailure: StudentFailure;
   isSuitableDiscipline?: (d: Discipline) => boolean;
 }

@@ -1,4 +1,4 @@
-import { TermType } from './apis/brsApi';
+import { StudentFailure, TermType } from './apis/brsApi';
 import createGroupsAsync from './createGroupsAsync';
 import moveStudentsAsync from './moveStudentsAsync';
 import putMarksToBrsManualAsync, {
@@ -134,6 +134,7 @@ async function runPutMarksForSample() {
     year: 2018,
     termType: TermType.Spring,
     course: 1,
+    defaultStudentFailure: StudentFailure.NoFailure,
   } as DisciplineConfig;
 
   await putMarksToBrsManualAsync(
@@ -142,7 +143,6 @@ async function runPutMarksForSample() {
     {
       save: true,
       verbose: true,
-      failureForSkipped: false,
     }
   );
 }
@@ -160,7 +160,6 @@ async function runPutMarksAutoForSample() {
     {
       save: true,
       verbose: true,
-      failureForSkipped: false,
     },
     (discipline) => discipline.group !== 'BAD-140934'
   );

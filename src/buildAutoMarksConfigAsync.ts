@@ -1,4 +1,4 @@
-import { TermType, Discipline } from './apis/brsApi';
+import { TermType, Discipline, StudentFailure } from './apis/brsApi';
 import {
   MarksData,
   DisciplineConfig,
@@ -8,6 +8,7 @@ import * as readStudents from './readStudentsAsync';
 import { ActualStudent } from './readStudentsAsync';
 import * as googleApi from './apis/googleApi';
 import { normalizeString, compareNormalized } from './helpers/tools';
+import { parseStudentFailure } from './helpers/brsHelpers';
 
 export default async function buildAutoMarksConfigAsync(
   spreadsheetId: string,
@@ -15,13 +16,14 @@ export default async function buildAutoMarksConfigAsync(
   isSuitableDiscipline: ((d: Discipline) => boolean) | null = null,
   isSuitableActualStudent: ((s: ActualStudent) => boolean) | null = null
 ): Promise<MarksData> {
-  const header = await readHeaderFromSpreadsheetAsync(spreadsheetId, sheetName);
+  const rows = await readRowsFromSpreadsheetAsync(spreadsheetId, sheetName);
+  const header = getHeader(rows);
 
   const indices = buildIndicesBy(header);
   const dataRange = buildDataRange(sheetName, indices);
   const controlActionConfigs = buildControlActionConfig(header, indices);
   const disciplineConfig = buildDisciplineConfig(
-    header,
+    rows,
     indices,
     isSuitableDiscipline
   );
@@ -31,7 +33,8 @@ export default async function buildAutoMarksConfigAsync(
     dataRange,
     indices.fullNameColumn - indices.left,
     indices.groupColumn - indices.left,
-    null
+    null,
+    indices.failureColumn - indices.left
   );
   const actualStudents = isSuitableActualStudent
     ? allActualStudents.filter(isSuitableActualStudent)
@@ -44,23 +47,28 @@ export default async function buildAutoMarksConfigAsync(
   };
 }
 
-async function readHeaderFromSpreadsheetAsync(
+async function readRowsFromSpreadsheetAsync(
   spreadsheetId: string,
   sheetName: string
 ) {
   const sheet = googleApi.openSpreadsheet(spreadsheetId);
-  const rows = (await sheet.readAsync(sheetName + '!A1:ZZ1'))
+  const rows = (await sheet.readAsync(sheetName + '!A1:ZZ100'))
     .values as string[][];
+  return rows || null;
+}
+
+function getHeader(rows: string[][]) {
   const header = rows && rows[0];
   if (!header) throw `Can't read header of spreadsheet`;
-
   return header;
 }
 
 function buildIndicesBy(header: string[]): Indices {
   const defaultGroupColumnName = 'Группа в БРС';
   const defaultFullNameColumnName = 'Фамилия Имя в БРС';
-  const disciplineColumnPrefix = 'Дисциплина';
+  const defaultFailureColumnName = 'Причина отсутствия';
+  const disciplineParameterKeyColumnPrefix = 'Названия параметров';
+  const disciplineParameterValueColumnPrefix = 'Значения параметров';
 
   const normalizedHeader = header && header.map((s) => normalizeString(s));
   const groupColumnIndex = normalizedHeader.indexOf(
@@ -69,28 +77,40 @@ function buildIndicesBy(header: string[]): Indices {
   const fullNameColumnIndex = normalizedHeader.indexOf(
     normalizeString(defaultFullNameColumnName)
   );
-  const disciplineColumnIndex = normalizedHeader.findIndex((s) =>
-    s.startsWith(normalizeString(disciplineColumnPrefix))
+  const failureColumnIndex = normalizedHeader.indexOf(
+    normalizeString(defaultFailureColumnName)
+  );
+  const disciplineParameterKeyColumnIndex = normalizedHeader.indexOf(
+    normalizeString(disciplineParameterKeyColumnPrefix)
+  );
+  const disciplineParameterValueColumnIndex = normalizedHeader.indexOf(
+    normalizeString(disciplineParameterValueColumnPrefix)
   );
 
-  const rightIndex = disciplineColumnIndex - 1;
-  // Колонка с описанием дисциплины должна быть справа, колонки с именами и группами студентов должны быть слева.
-  // Колонки с именами и группами студентов должны быть рядом.
   if (
+    failureColumnIndex < 0 ||
     groupColumnIndex < 0 ||
     fullNameColumnIndex < 0 ||
-    disciplineColumnIndex < 0 ||
-    groupColumnIndex > rightIndex ||
-    fullNameColumnIndex > rightIndex ||
-    Math.abs(fullNameColumnIndex - groupColumnIndex) !== 1
+    groupColumnIndex > failureColumnIndex ||
+    fullNameColumnIndex > failureColumnIndex ||
+    Math.abs(fullNameColumnIndex - groupColumnIndex) !== 1 ||
+    disciplineParameterKeyColumnIndex < 0 ||
+    disciplineParameterValueColumnIndex < 0 ||
+    disciplineParameterKeyColumnIndex <= failureColumnIndex ||
+    disciplineParameterValueColumnIndex <= failureColumnIndex ||
+    disciplineParameterValueColumnIndex !==
+      disciplineParameterKeyColumnIndex + 1
   )
     throw `Wrong order of columns`;
   const leftIndex = Math.min(groupColumnIndex, fullNameColumnIndex);
+  const rightIndex = failureColumnIndex;
 
   return {
     groupColumn: groupColumnIndex,
     fullNameColumn: fullNameColumnIndex,
-    diciplineColumn: disciplineColumnIndex,
+    failureColumn: failureColumnIndex,
+    disciplineKeyColumn: disciplineParameterKeyColumnIndex,
+    disciplineValueColumn: disciplineParameterValueColumnIndex,
     left: leftIndex,
     right: rightIndex,
   };
@@ -108,6 +128,7 @@ function buildControlActionConfig(header: string[], indices: Indices) {
     if (
       index === indices.groupColumn ||
       index === indices.fullNameColumn ||
+      index === indices.failureColumn ||
       !header[index]
     ) {
       continue;
@@ -117,6 +138,7 @@ function buildControlActionConfig(header: string[], indices: Indices) {
       propertyIndex: index - indices.left,
     });
   }
+
   for (const config of controlActionConfigs) {
     if (config.controlActions.length === 1) {
       const sameColumns = controlActionConfigs.filter(
@@ -141,40 +163,72 @@ function buildControlActionConfig(header: string[], indices: Indices) {
 }
 
 function buildDisciplineConfig(
-  header: string[],
+  rows: string[][],
   indices: Indices,
   isSuitableDiscipline: (d: Discipline) => boolean
 ) {
-  const result = {} as DisciplineConfig;
-  for (const part of header[indices.diciplineColumn].split(';')) {
-    const keyValue = part.split(':').map((p) => p.trim());
-    const normalizedKey = normalizeString(keyValue[0]);
-    const value = keyValue[1];
-    if (normalizedKey === normalizeString('Дисциплина')) {
-      result.name = value;
-    } else if (normalizedKey === normalizeString('ИТС')) {
-      result.isModule = value.toLowerCase() === 'да';
-    } else if (normalizedKey === normalizeString('Год')) {
-      result.year = parseInt(value.toLowerCase(), 10);
-    } else if (normalizedKey === normalizeString('Семестр')) {
-      if (value.toLowerCase() === 'осенний') {
-        result.termType = TermType.Fall;
-      } else if (value.toLowerCase() === 'весенний') {
-        result.termType = TermType.Spring;
-      }
-    } else if (normalizedKey === normalizeString('Курс')) {
-      result.course = parseInt(value.toLowerCase(), 10);
-    }
-  }
-  result.isSuitableDiscipline = isSuitableDiscipline;
+  const result: DisciplineConfig = {
+    name: '',
+    year: 0,
+    termType: TermType.Fall,
+    course: 1,
+    isModule: false,
+    defaultStudentFailure: StudentFailure.NoFailure,
+  };
 
+  for (let i = 0; i < rows.length; i++) {
+    const key = rows[i][indices.disciplineKeyColumn].trim();
+    const value = rows[i][indices.disciplineValueColumn].trim();
+    if (!key) {
+      break;
+    }
+    addDisciplineConfigParameter(result, key, value);
+  }
+
+  result.isSuitableDiscipline = isSuitableDiscipline;
   return result;
+}
+
+function addDisciplineConfigParameter(
+  config: DisciplineConfig,
+  key: string,
+  value: string
+) {
+  if (compareNormalized(key, 'Дисциплина')) {
+    if (value) {
+      config.name = value;
+    }
+  } else if (compareNormalized(key, 'ИТС')) {
+    if (value) {
+      config.isModule = value.toLowerCase() === 'да';
+    }
+  } else if (compareNormalized(key, 'Год')) {
+    if (value) {
+      config.year = parseInt(value.toLowerCase(), 10);
+    }
+  } else if (compareNormalized(key, 'Семестр')) {
+    if (value) {
+      if (value.toLowerCase() === 'осенний') {
+        config.termType = TermType.Fall;
+      } else if (value.toLowerCase() === 'весенний') {
+        config.termType = TermType.Spring;
+      }
+    }
+  } else if (compareNormalized(key, 'Курс')) {
+    if (value) {
+      config.course = parseInt(value.toLowerCase(), 10);
+    }
+  } else if (compareNormalized(key, 'Причина отсутствия по умолчанию')) {
+    config.defaultStudentFailure = parseStudentFailure(value || '');
+  }
 }
 
 interface Indices {
   groupColumn: number;
   fullNameColumn: number;
-  diciplineColumn: number;
+  failureColumn: number;
+  disciplineKeyColumn: number;
+  disciplineValueColumn: number;
   left: number;
   right: number;
 }

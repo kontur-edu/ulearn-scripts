@@ -8,10 +8,12 @@ import {
 import { parseAnyFloat, compareNormalized } from './helpers/tools';
 import * as fio from './helpers/fio';
 import { ActualStudent } from './readStudentsAsync';
+import { formatStudentFailure } from './helpers/brsHelpers';
 
 export default async function putMarksForDisciplineAsync(
   discipline: Discipline,
   actualStudents: ActualStudent[],
+  defaultStudentFailure: StudentFailure,
   controlActionConfigs: ControlActionConfig[],
   options: PutMarksOptions
 ) {
@@ -47,6 +49,7 @@ export default async function putMarksForDisciplineAsync(
   await updateFailuresForSkippedStudentsAsync(
     skippedBrsStudents,
     discipline,
+    defaultStudentFailure,
     options
   );
   console.log();
@@ -145,6 +148,29 @@ async function putMarksForStudentAsync(
     }
   }
 
+  const brsFailureStatus = student.brs.failure
+    ? (student.brs.failure as StudentFailure)
+    : StudentFailure.NoFailure;
+  const actualFailure = student.actual.failure || StudentFailure.NoFailure;
+  let failureStatus = '';
+  if (actualFailure === brsFailureStatus) {
+    failureStatus = `${formatStudentFailure(actualFailure)}`;
+  } else {
+    failureStatus = `${formatStudentFailure(actualFailure)}!`;
+    try {
+      if (options.save) {
+        await brsApi.putStudentFailureAsync(
+          student.brs.studentUuid,
+          discipline,
+          actualFailure
+        );
+      }
+      updated++;
+    } catch (error) {
+      failed++;
+    }
+  }
+
   const status = failed > 0 ? 'FAILED ' : updated > 0 ? 'UPDATED' : 'SKIPPED';
   if (options.verbose || failed > 0) {
     const studentName = (
@@ -153,7 +179,7 @@ async function putMarksForStudentAsync(
     console.log(
       `${status} ${studentName} updated: ${updated}, failed: ${failed}, marks: ${marks.join(
         ' '
-      )}`
+      )}, failureStatus: ${failureStatus}`
     );
   }
   return status;
@@ -211,16 +237,18 @@ function getSuitableControlAction(
 async function updateFailuresForSkippedStudentsAsync(
   students: StudentMark[],
   discipline: Discipline,
+  defaultStudentFailure: StudentFailure,
   options: PutMarksOptions
 ) {
-  if (options.failureForSkipped === false) {
-    return;
-  }
-
   const statusCounters: { [k: string]: number } = {};
 
   for (const student of students) {
-    const status = await updateFailureForStudent(student, discipline, options);
+    const status = await updateFailureForStudent(
+      student,
+      discipline,
+      defaultStudentFailure,
+      options
+    );
     if (statusCounters[status] === undefined) {
       statusCounters[status] = 0;
     }
@@ -236,13 +264,14 @@ async function updateFailuresForSkippedStudentsAsync(
 async function updateFailureForStudent(
   student: StudentMark,
   discipline: Discipline,
+  defaultStudentFailure: StudentFailure,
   options: PutMarksOptions
 ) {
   let status = '';
   const brsFailureStatus = student.failure
     ? (student.failure as StudentFailure)
     : StudentFailure.NoFailure;
-  const actualFailure = options.failureForSkipped as StudentFailure;
+  const actualFailure = defaultStudentFailure;
   if (actualFailure === brsFailureStatus) {
     status = 'SKIPPED';
   } else {
@@ -348,7 +377,6 @@ export interface ControlActionConfig {
 export interface PutMarksOptions {
   save: boolean;
   verbose: boolean;
-  failureForSkipped: StudentFailure | false;
 }
 
 interface MergedStudent {
