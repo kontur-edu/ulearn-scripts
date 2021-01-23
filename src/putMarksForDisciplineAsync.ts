@@ -255,9 +255,14 @@ async function updateFailuresForSkippedStudentsAsync(
     statusCounters[status]++;
   }
 
-  console.log('Failures update statuses:');
-  for (const k of Object.keys(statusCounters)) {
-    console.log(`- ${k} = ${statusCounters[k]}`);
+  const statusKeys = Object.keys(statusCounters);
+  if (statusKeys.length > 0) {
+    console.log('Failures update statuses:');
+    for (const k of statusKeys) {
+      console.log(`- ${k} = ${statusCounters[k]}`);
+    }
+  } else {
+    console.log('No failures for skipped students');
   }
 }
 
@@ -295,8 +300,10 @@ async function updateFailureForStudent(
     ).substr(0, 30);
     const description =
       status !== 'SKIPPED'
-        ? `${StudentFailure[actualFailure]} from ${StudentFailure[brsFailureStatus]}`
-        : StudentFailure[actualFailure];
+        ? `${formatStudentFailure(actualFailure)} from ${formatStudentFailure(
+            brsFailureStatus
+          )}`
+        : formatStudentFailure(actualFailure);
     console.log(`${status} ${studentName} ${description}`);
   }
   return status;
