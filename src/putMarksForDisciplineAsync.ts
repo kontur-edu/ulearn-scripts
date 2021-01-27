@@ -148,10 +148,9 @@ async function putMarksForStudentAsync(
     }
   }
 
-  const brsFailureStatus = student.brs.failure
-    ? (student.brs.failure as StudentFailure)
-    : StudentFailure.NoFailure;
-  const actualFailure = student.actual.failure || StudentFailure.NoFailure;
+  const brsFailureStatus =
+    (student.brs.failure as StudentFailure) ?? StudentFailure.NoFailure;
+  const actualFailure = student.actual.failure ?? StudentFailure.NoFailure;
   let failureStatus = '';
   if (actualFailure === brsFailureStatus) {
     failureStatus = `${formatStudentFailure(actualFailure)}`;
