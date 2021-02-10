@@ -158,6 +158,7 @@ function getStudentScore(
     exercise: 0,
     homework: 0,
     seminar: 0,
+    game: 0,
   };
 
   for (const score of student.slides_scores) {

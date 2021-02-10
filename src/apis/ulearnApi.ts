@@ -282,7 +282,7 @@ export interface CourseScoringGroup {
   name: string;
 }
 
-export type ScoringGroup = 'activity' | 'exercise' | 'homework' | 'seminar';
+export type ScoringGroup = 'activity' | 'exercise' | 'homework' | 'seminar' | 'game';
 
 export interface CourseUnit {
   additional_scores: CourseAdditionalScore[];
