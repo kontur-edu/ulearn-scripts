@@ -2,12 +2,13 @@ import * as googleApi from './apis/googleApi';
 import { Spreadsheet } from './apis/googleApi';
 import * as ulearnApi from './apis/ulearnApi';
 import {
-  GroupInfo,
   ScoringGroup,
-  Statistics,
-  StatisticsStudent,
+  ShortSlideInfo,
+  GroupInfo,
+  UserProgress,
 } from './apis/ulearnApi';
 import * as fio from './helpers/fio';
+import { getFullName } from './helpers/ulearnTools';
 
 export default async function updateScoresFromUlearn(
   spreadsheetId: string,
@@ -80,7 +81,7 @@ async function fillSheetWithScoresAsync(
   }
 
   const restStudentScores = Object.keys(studentScores)
-    .map(k => studentScores[k])
+    .map((k) => studentScores[k])
     .sort((a, b) => {
       const c1 = a.groupName.localeCompare(b.groupName);
       return c1 !== 0 ? c1 : a.name.localeCompare(b.name);
@@ -103,7 +104,7 @@ function getRowByStudentScore(studentScore: StudentScore) {
     fio.toKey(studentScore.name),
     studentScore.scores.exercise,
     studentScore.scores.homework,
-    studentScore.scores.game
+    studentScore.scores.game,
   ];
 }
 
@@ -112,82 +113,92 @@ async function getStudentScoresAsync(
   groupNames: string[],
   onlyMaxScoresForHomework: boolean
 ) {
+  const courseSlides = await getCourseSlidesAsync(courseId);
+
   const availableGroups = await ulearnApi.getGroupsAsync(courseId);
-  const filteredGroups = availableGroups.filter(g =>
-    groupNames.some(n => g.name === n)
+  const filteredGroups = availableGroups.filter((g) =>
+    groupNames.some((n) => g.name === n)
   );
 
-  const filteredGroupIds = filteredGroups.map(g => g.id);
-  const statistics = await ulearnApi.getCourseStatisticsAsync(
+  const studentScores = await prepareEmptyStudentScoresAsync(filteredGroups);
+
+  const studentIds = Object.keys(studentScores);
+  const progress = await ulearnApi.readUserProgressBatchAsync(
     courseId,
-    filteredGroupIds
+    studentIds
   );
 
-  const slideScores = getSlideScores(statistics);
-  const students = statistics.students.map(s =>
-    getStudentScore(s, slideScores, filteredGroups, onlyMaxScoresForHomework)
-  );
-
-  const result: StudentScores = {};
-  for (const s of students) {
-    result[s.id] = s;
+  for (const studentId of studentIds) {
+    const studentProgress = progress.userProgress[studentId];
+    if (studentProgress) {
+      fillStudentScore(
+        studentScores[studentId],
+        studentProgress,
+        courseSlides,
+        onlyMaxScoresForHomework
+      );
+    }
   }
-  return result;
+
+  return studentScores;
 }
 
-function getSlideScores(statistics: Statistics) {
-  const result: SlideScores = {};
-  for (const u of statistics.course.units) {
-    for (const s of u.slides) {
+async function getCourseSlidesAsync(courseId: string) {
+  const course = await ulearnApi.getCourseAsync(courseId);
+  const courseSlides: { [slideId: string]: ShortSlideInfo } = {};
+  for (const unit of course.units) {
+    for (const slide of unit.slides) {
+      courseSlides[slide.id] = slide;
+    }
+  }
+  return courseSlides;
+}
+
+async function prepareEmptyStudentScoresAsync(groups: GroupInfo[]) {
+  const result: StudentScores = {};
+  for (const group of groups) {
+    const students = await ulearnApi.getStudentsAsync(group.id);
+    for (const s of students) {
       result[s.id] = {
-        maxScore: s.max_score,
-        scoringGroup: s.max_score <= 10 ? 'exercise' : 'homework',
+        id: s.id,
+        name: getFullName(s),
+        groupId: group.id,
+        groupName: group.name,
+        scores: {
+          activity: 0,
+          exercise: 0,
+          homework: 0,
+          seminar: 0,
+          game: 0,
+        },
       };
     }
   }
   return result;
 }
 
-function getStudentScore(
-  student: StatisticsStudent,
-  slideScores: SlideScores,
-  groups: GroupInfo[],
+function fillStudentScore(
+  studentScore: StudentScore,
+  studentProgress: UserProgress,
+  courseSlides: {
+    [slideId: string]: ShortSlideInfo;
+  },
   onlyMaxScoresForHomework: boolean
-): StudentScore {
-  const scores = {
-    activity: 0,
-    exercise: 0,
-    homework: 0,
-    seminar: 0,
-    game: 0,
-  };
-
-  for (const score of student.slides_scores) {
-    const slideScore = slideScores[score.slide_id];
-    if (
-      !onlyMaxScoresForHomework ||
-      slideScore.scoringGroup !== 'homework' ||
-      score.score === slideScore.maxScore
-    ) {
-      scores[slideScore.scoringGroup] += score.score;
+) {
+  for (const slideId of Object.keys(studentProgress.visitedSlides)) {
+    const score = studentProgress.visitedSlides[slideId].score;
+    const slide = courseSlides[slideId];
+    if (slide) {
+      const { scoringGroup, maxScore } = slide;
+      if (scoringGroup === 'homework') {
+        if (!onlyMaxScoresForHomework || score === maxScore) {
+          studentScore.scores[scoringGroup] += score;
+        }
+      } else {
+        studentScore.scores[scoringGroup] += score;
+      }
     }
   }
-
-  for (const score of student.additional_scores) {
-    scores[score.scoring_group_id] += score.score;
-  }
-
-  const mainGroup = groups.filter(group =>
-    student.groups.some(groupId => group.id === groupId)
-  )[0];
-
-  return {
-    id: student.user_id,
-    name: student.name,
-    groupId: mainGroup.id,
-    groupName: mainGroup.name,
-    scores,
-  };
 }
 
 interface StudentScores {
@@ -200,13 +211,4 @@ interface StudentScore {
   groupId: number;
   groupName: string;
   scores: { [key in ScoringGroup]: number };
-}
-
-interface SlideScores {
-  [id: string]: SlideScore;
-}
-
-interface SlideScore {
-  maxScore: number;
-  scoringGroup: ScoringGroup;
 }

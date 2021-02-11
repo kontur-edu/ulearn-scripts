@@ -5,20 +5,6 @@ import * as request from 'request-promise';
 const token = fs.readFileSync('./secrets/ulearn.jwt', 'utf8');
 const baseApiUrl = 'https://api.ulearn.me';
 
-const authCookie = fs.readFileSync('./secrets/ulearn.auth', 'utf8');
-const baseSiteUrl = 'https://ulearn.me';
-
-export async function getCourseStatisticsAsync(
-  courseId: string,
-  groupIds: number[]
-) {
-  return requestSiteJsonAsync<Statistics>(
-    `/Analytics/ExportCourseStatisticsAsJson?courseId=${courseId}${groupIds
-      .map((id) => `&group=${id}`)
-      .join('')}`
-  );
-}
-
 export async function getCourseAsync(courseId: string) {
   return requestApiJsonAsync<CourseInfo>(`/courses/${courseId}`);
 }
@@ -133,30 +119,6 @@ export async function readUserProgressBatchAsync(
     },
     json: true,
   });
-}
-
-async function requestSiteJsonAsync<T>(uri: string): Promise<T> {
-  const response = await requestSiteAsync(uri);
-  return JSON.parse(response);
-}
-
-async function requestSiteAsync(uri: string): Promise<string> {
-  const response = await request({
-    url: baseSiteUrl + uri,
-    method: 'GET',
-    resolveWithFullResponse: true,
-    simple: false,
-    headers: { cookie: `ulearn.auth=${authCookie}` },
-  });
-  const contentType = response.headers['content-type'];
-  if (contentType !== undefined && contentType.startsWith('application/json')) {
-    return response.body;
-  } else {
-    console.error(
-      '>> Ulearn Site error. Perhaps, you should update "ulearn.auth" cookie'
-    );
-    return null;
-  }
 }
 
 async function requestApiJsonAsync<T>(
@@ -310,7 +272,7 @@ export interface UnitScoringGroupInfoUnitScoringGroupInfo {
 }
 
 export interface ScoringSettingsModel {
-  groups: CourseScoringGroup[];
+  groups: ScoringGroupModel[];
 }
 
 export interface ScoringGroupModel {
@@ -348,63 +310,3 @@ export type ScoringGroup =
   | 'homework'
   | 'seminar'
   | 'game';
-
-export interface Statistics {
-  course: StatisticsCourse;
-  groups: StatisticsGroup[];
-  students: StatisticsStudent[];
-}
-
-export interface StatisticsCourse {
-  scoring_groups: CourseScoringGroup[];
-  title: string;
-  units: CourseUnit[];
-}
-
-export interface CourseScoringGroup {
-  abbreviation: string;
-  id: ScoringGroup;
-  name: string;
-}
-
-export interface CourseUnit {
-  additional_scores: CourseAdditionalScore[];
-  id: string;
-  slides: CourseSlide[];
-  title: string;
-}
-
-export interface CourseAdditionalScore {
-  max_additional_score: number;
-  scoring_group_id: string;
-}
-
-export interface CourseSlide {
-  id: string;
-  max_score: number;
-  title: string;
-}
-
-export interface StatisticsGroup {
-  Title: string;
-  id: string;
-}
-
-export interface StatisticsStudent {
-  additional_scores: StudentAdditionalScore[];
-  groups: number[];
-  name: string;
-  slides_scores: StudentSlideScore[];
-  user_id: string;
-}
-
-export interface StudentAdditionalScore {
-  score: number;
-  scoring_group_id: ScoringGroup;
-  unit_id: string;
-}
-
-export interface StudentSlideScore {
-  score: number;
-  slide_id: string;
-}
