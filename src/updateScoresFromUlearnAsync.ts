@@ -103,6 +103,7 @@ function getRowByStudentScore(studentScore: StudentScore) {
     fio.toKey(studentScore.name),
     studentScore.scores.exercise,
     studentScore.scores.homework,
+    studentScore.scores.game
   ];
 }
 
