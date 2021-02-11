@@ -1,5 +1,5 @@
 import * as ulearnApi from './apis/ulearnApi';
-import { Group } from './apis/ulearnApi';
+import { GroupInfo } from './apis/ulearnApi';
 import { findGroupByName } from './helpers/ulearnTools';
 import { ActualStudent } from './readStudentsAsync';
 import moveStudentAsync, { MoveStudentOptions } from './moveStudentAsync';
@@ -27,7 +27,7 @@ export default async function moveStudentsAsync(
 }
 
 function findTargetGroups(
-  ulearnGroups: Group[],
+  ulearnGroups: GroupInfo[],
   actualStudents: ActualStudent[]
 ) {
   const actualGroups: { [groupName: string]: boolean } = {};

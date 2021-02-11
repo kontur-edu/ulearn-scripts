@@ -1,5 +1,5 @@
 import * as ulearnApi from './apis/ulearnApi';
-import { Group } from './apis/ulearnApi';
+import { GroupInfo } from './apis/ulearnApi';
 
 export default async function createGroupsAsync(
   courseId: string,
@@ -33,7 +33,7 @@ async function createGroupAsync(
   reviewMode: ReviewMode,
   isInviteLinkEnabled: boolean,
   canStudentsSeeGroupProgress: boolean
-): Promise<Group> {
+): Promise<GroupInfo> {
   try {
     const groupInfo = await ulearnApi.postGroupAsync(courseId, groupName);
     console.log(`Group '${groupName}' was created with id=${groupInfo.id}`);

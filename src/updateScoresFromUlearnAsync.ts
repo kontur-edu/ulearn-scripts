@@ -2,7 +2,7 @@ import * as googleApi from './apis/googleApi';
 import { Spreadsheet } from './apis/googleApi';
 import * as ulearnApi from './apis/ulearnApi';
 import {
-  Group,
+  GroupInfo,
   ScoringGroup,
   Statistics,
   StatisticsStudent,
@@ -151,7 +151,7 @@ function getSlideScores(statistics: Statistics) {
 function getStudentScore(
   student: StatisticsStudent,
   slideScores: SlideScores,
-  groups: Group[],
+  groups: GroupInfo[],
   onlyMaxScoresForHomework: boolean
 ): StudentScore {
   const scores = {

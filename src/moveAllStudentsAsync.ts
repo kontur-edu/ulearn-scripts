@@ -1,5 +1,5 @@
 import * as ulearnApi from './apis/ulearnApi';
-import { Group } from './apis/ulearnApi';
+import { GroupInfo } from './apis/ulearnApi';
 import { findGroupByName } from './helpers/ulearnTools';
 import { ActualStudent } from './readStudentsAsync';
 import moveStudentAsync, { MoveStudentOptions } from './moveStudentAsync';
@@ -25,8 +25,8 @@ export default async function moveAllStudentsAsync(
 }
 
 async function moveStudentsFrom(
-  sourceGroup: ulearnApi.Group,
-  targetGroups: ulearnApi.Group[],
+  sourceGroup: ulearnApi.GroupInfo,
+  targetGroups: ulearnApi.GroupInfo[],
   actualStudents: ActualStudent[],
   options: MoveStudentOptions
 ) {
@@ -43,7 +43,7 @@ async function moveStudentsFrom(
 }
 
 function findTargetGroups(
-  courseGroups: Group[],
+  courseGroups: GroupInfo[],
   actualStudents: ActualStudent[]
 ) {
   const actualGroups: { [groupName: string]: boolean } = {};
@@ -57,10 +57,10 @@ function findTargetGroups(
 
 async function findAdditionalGroupsAsync(
   courseId: string,
-  courseGroups: Group[],
+  courseGroups: GroupInfo[],
   additionalGroups: { courseId: string; groupName: string }[]
-): Promise<Group[]> {
-  let result: Group[] = [];
+): Promise<GroupInfo[]> {
+  let result: GroupInfo[] = [];
   for (const additionalGroup of additionalGroups) {
     const groups =
       additionalGroup.courseId === courseId
@@ -73,8 +73,8 @@ async function findAdditionalGroupsAsync(
   return result;
 }
 
-function mergeGroups(groups1: Group[], groups2: Group[]): Group[] {
-  const groups: { [id: string]: Group } = {};
+function mergeGroups(groups1: GroupInfo[], groups2: GroupInfo[]): GroupInfo[] {
+  const groups: { [id: string]: GroupInfo } = {};
   for (const g of groups1) {
     groups[g.id] = g;
   }

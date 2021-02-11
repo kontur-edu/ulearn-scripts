@@ -1,5 +1,5 @@
 import * as ulearnApi from './apis/ulearnApi';
-import { Group, GroupPatch } from './apis/ulearnApi';
+import { GroupInfo, UpdateGroupParameters } from './apis/ulearnApi';
 
 export default async function copyGroupsAsync(
   courseId: string,
@@ -33,7 +33,7 @@ export default async function copyGroupsAsync(
 }
 
 async function copyGroupAsync(
-  existingGroup: Group,
+  existingGroup: GroupInfo,
   destinationCourseId: string,
   renameGroup: (from: string) => string,
   makeMeOwner: boolean,
@@ -41,7 +41,7 @@ async function copyGroupAsync(
   reviewMode: ReviewMode,
   isInviteLinkEnabled: boolean,
   canStudentsSeeGroupProgress: boolean
-): Promise<Group> {
+): Promise<GroupInfo> {
   try {
     const groupInfo = await ulearnApi.copyGroupAsync(
       existingGroup.id,
@@ -52,7 +52,7 @@ async function copyGroupAsync(
       `Group '${existingGroup.name}' was copied to '${destinationCourseId}' with id=${groupInfo.id}`
     );
 
-    const patch: GroupPatch = {
+    const patch: UpdateGroupParameters = {
       isInviteLinkEnabled,
       isManualCheckingEnabled: reviewMode !== 'no',
       isManualCheckingEnabledForOldSolutions:

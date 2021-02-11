@@ -1,5 +1,5 @@
 import * as ulearnApi from './apis/ulearnApi';
-import { Group, Student } from './apis/ulearnApi';
+import { GroupInfo, ShortUserInfo } from './apis/ulearnApi';
 import * as fio from './helpers/fio';
 import {
   findGroupByName,
@@ -9,9 +9,9 @@ import {
 import { ActualStudent } from './readStudentsAsync';
 
 export default async function moveStudentAsync(
-  student: Student,
-  sourceGroup: Group,
-  targetGroups: Group[],
+  student: ShortUserInfo,
+  sourceGroup: GroupInfo,
+  targetGroups: GroupInfo[],
   actualStudents: ActualStudent[],
   options: MoveStudentOptions
 ) {
@@ -51,7 +51,7 @@ export default async function moveStudentAsync(
       ` 1) '${fullName}' had been already exist at '${targetGroup.name}'`
     );
   } else {
-    await ulearnApi.copyStudentsToGroup([student.id], targetGroup.id);
+    await ulearnApi.copyStudentsToGroupAsync([student.id], targetGroup.id);
     console.log(
       ` 1) '${fullName}' was copied from '${sourceGroup.name}'` +
         ` to '${targetGroup.name}'`
@@ -71,7 +71,7 @@ export default async function moveStudentAsync(
 
 export function findSuitableActualStudents(
   actualStudents: ActualStudent[],
-  student: Student
+  student: ShortUserInfo
 ): ActualStudent[] {
   const fullName = getFullName(student);
 

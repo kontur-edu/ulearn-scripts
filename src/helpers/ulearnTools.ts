@@ -1,9 +1,9 @@
-import { Group, Student, getStudentsAsync } from '../apis/ulearnApi';
+import { GroupInfo, ShortUserInfo, getStudentsAsync } from '../apis/ulearnApi';
 
 export function findGroupByName(
-  ulearnGroups: Group[],
+  ulearnGroups: GroupInfo[],
   groupName: string
-): Group {
+): GroupInfo {
   const suitableGroups = ulearnGroups.filter(g => g.name === groupName);
   if (suitableGroups.length !== 1) {
     throw new Error(`Can't find single group '${groupName}' at ulearn`);
@@ -11,7 +11,7 @@ export function findGroupByName(
   return suitableGroups[0];
 }
 
-export function getFullName(student: Student) {
+export function getFullName(student: ShortUserInfo) {
   const { lastName, firstName, visibleName } = student;
   return lastName || firstName
     ? `${lastName.trim()} ${firstName.trim()}`
@@ -19,8 +19,8 @@ export function getFullName(student: Student) {
 }
 
 export async function isGroupContainsStudentAsync(
-  group: Group,
-  student: Student
+  group: GroupInfo,
+  student: ShortUserInfo
 ) {
   if (student.id) {
     const students = await getStudentsAsync(group.id);

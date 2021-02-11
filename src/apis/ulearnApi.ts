@@ -14,25 +14,29 @@ export async function getCourseStatisticsAsync(
 ) {
   return requestSiteJsonAsync<Statistics>(
     `/Analytics/ExportCourseStatisticsAsJson?courseId=${courseId}${groupIds
-      .map(id => `&group=${id}`)
+      .map((id) => `&group=${id}`)
       .join('')}`
   );
 }
 
+export async function getCourseAsync(courseId: string) {
+  return requestApiJsonAsync<CourseInfo>(`/courses/${courseId}`);
+}
+
 export async function getGroupAsync(groupId: number) {
-  return requestApiJsonAsync<Group>(`/groups/${groupId}`);
+  return requestApiJsonAsync<GroupInfo>(`/groups/${groupId}`);
 }
 
 export async function getGroupsAsync(courseId: string) {
   return (
-    await requestApiJsonAsync<{ groups: Group[] }>(
+    await requestApiJsonAsync<{ groups: GroupInfo[] }>(
       `/groups?course_id=${courseId}`
     )
   ).groups;
 }
 
 export async function postGroupAsync(courseId: string, groupName: string) {
-  return requestApiAsync<GroupPosted>(`/groups?course_id=${courseId}`, {
+  return requestApiAsync<CreateGroupResponse>(`/groups?course_id=${courseId}`, {
     method: 'POST',
     body: {
       name: groupName,
@@ -41,8 +45,11 @@ export async function postGroupAsync(courseId: string, groupName: string) {
   });
 }
 
-export async function patchGroupAsync(groupId: number, patch: GroupPatch) {
-  return requestApiAsync<Group>(`/groups/${groupId}`, {
+export async function patchGroupAsync(
+  groupId: number,
+  patch: UpdateGroupParameters
+) {
+  return requestApiAsync<GroupInfo>(`/groups/${groupId}`, {
     method: 'PATCH',
     body: patch,
     json: true,
@@ -60,17 +67,13 @@ export async function copyGroupAsync(
   destinationCourseId: string,
   makeMeOwner: boolean
 ) {
-  return requestApiAsync<GroupPosted>(
+  return requestApiAsync<CopyGroupResponse>(
     `/groups/${groupId}/copy?destination_course_id=${destinationCourseId}&make_me_owner=${makeMeOwner}`,
     {
       method: 'POST',
       json: true,
     }
   );
-}
-
-export async function getGroupScoresAsync(groupId: number) {
-  return requestApiJsonAsync<GroupScores>(`/groups/${groupId}/scores`);
 }
 
 export async function postGroupScoresAsync(
@@ -88,10 +91,10 @@ export async function postGroupScoresAsync(
 
 export async function getStudentsAsync(groupId: number) {
   return (
-    await requestApiJsonAsync<{ students: StudentToGet[] }>(
+    await requestApiJsonAsync<{ students: GroupStudentInfo[] }>(
       `/groups/${groupId}/students`
     )
-  ).students.map(s => s.user);
+  ).students.map((s) => s.user);
 }
 
 export async function postStudentAsync(groupId: number, studentId: string) {
@@ -106,7 +109,7 @@ export async function deleteStudentAsync(groupId: number, studentId: string) {
   });
 }
 
-export async function copyStudentsToGroup(
+export async function copyStudentsToGroupAsync(
   studentIds: string[],
   toGroupId: number
 ) {
@@ -114,6 +117,19 @@ export async function copyStudentsToGroup(
     method: 'POST',
     body: {
       studentIds,
+    },
+    json: true,
+  });
+}
+
+export async function readUserProgressBatchAsync(
+  courseId: string,
+  studentIds: string[]
+) {
+  return requestApiAsync<UsersProgressResponse>(`/userProgress/${courseId}`, {
+    method: 'POST',
+    body: {
+      userIds: studentIds,
     },
     json: true,
   });
@@ -180,14 +196,14 @@ interface RequestOptions {
   json?: boolean;
 }
 
-type Status = 'ok' | string;
-type Gender = 'male' | 'female' | string;
-type AccessType = 'fullAccess' | string;
-type timeString = string;
+type Status = 'ok' | 'error';
+type Gender = 'male' | 'female';
+type GroupAccessType = 'fullAccess' | 'owner';
+type TimeString = string;
 
-export interface Group {
+export interface GroupInfo {
   id: number;
-  createTime: timeString;
+  createTime: TimeString;
   name: string;
   isArchived: boolean;
   inviteHash: string;
@@ -198,26 +214,32 @@ export interface Group {
   defaultProhibitFurtherReview: boolean;
   canStudentsSeeGroupProgress: boolean;
   studentsCount: number;
-  owner: User;
+  owner: ShortUserInfo;
   accesses: [
     {
-      user: User;
-      accessType: AccessType;
-      grantedBy: User;
-      grantTime: timeString;
+      user: ShortUserInfo;
+      accessType: GroupAccessType;
+      grantedBy: ShortUserInfo;
+      grantTime: TimeString;
     }
   ];
   apiUrl: string;
   status: Status;
 }
 
-export interface GroupPosted {
+export interface CreateGroupResponse {
   id: number;
   apiUrl: string;
   status: Status;
 }
 
-export interface GroupPatch {
+export interface CopyGroupResponse {
+  id: number;
+  apiUrl: string;
+  status: Status;
+}
+
+export interface UpdateGroupParameters {
   name?: string;
   isArchived?: boolean;
   isInviteLinkEnabled?: boolean;
@@ -227,22 +249,7 @@ export interface GroupPatch {
   canStudentsSeeGroupProgress?: boolean;
 }
 
-export interface GroupScores {
-  scores: GroupScore[];
-  status: Status;
-}
-
-export interface GroupScore {
-  areAdditionalScoresEnabledForAllGroups: boolean;
-  canInstructorSetAdditionalScoreInSomeUnit: boolean;
-  areAdditionalScoresEnabledInThisGroup: boolean;
-  id: ScoringGroup;
-  name: string;
-  abbreviation: string;
-  description: string;
-}
-
-export interface User {
+export interface ShortUserInfo {
   id: string;
   login: string;
   email: string;
@@ -253,16 +260,94 @@ export interface User {
   gender: Gender;
 }
 
-export interface Student {
-  id: string;
-  lastName: string;
-  firstName: string;
-  visibleName: string;
+interface GroupStudentInfo {
+  user: ShortUserInfo;
+  addingTime: TimeString;
 }
 
-interface StudentToGet {
-  user: Student;
+export interface CourseInfo {
+  id: string;
+  title: string;
+  description: string;
+  units: UnitInfo[];
+  nextUnitPublishTime: TimeString;
+  scoring: ScoringSettingsModel;
+  containsFlashcards: boolean;
+  isTempCourse: boolean;
+  tempCourseError: string;
 }
+
+export interface UnitInfo {
+  id: string;
+  title: string;
+  isNotPublished: boolean;
+  publicationDate: TimeString;
+  slides: ShortSlideInfo[];
+  additionalScores: UnitScoringGroupInfoUnitScoringGroupInfo[];
+}
+
+export interface ShortSlideInfo {
+  id: string;
+  title: string;
+  hide: boolean;
+  slug: string;
+  maxScore: 0;
+  scoringGroup: ScoringGroup;
+  type: SlideType;
+  apiUrl: string;
+  questionsCount: number;
+  gitEditLink: string;
+}
+
+export interface UnitScoringGroupInfoUnitScoringGroupInfo {
+  canInstructorSetAdditionalScore: boolean;
+  maxAdditionalScore: number;
+  id: string;
+  name: string;
+  abbreviation: string;
+  description: string;
+  weight: number;
+}
+
+export interface ScoringSettingsModel {
+  groups: CourseScoringGroup[];
+}
+
+export interface ScoringGroupModel {
+  id: string;
+  name: string;
+  abbr: string;
+  description: string;
+  weight: number;
+}
+
+export interface UsersProgressResponse {
+  userProgress: { [userId: string]: UserProgress };
+  status: Status;
+}
+
+export interface UserProgress {
+  visitedSlides: { [slideId: string]: UserProgressSlideResult };
+  additionalScores: { [i: string]: { [j: string]: number } };
+}
+
+export interface UserProgressSlideResult {
+  score: number;
+  usedAttempts: number;
+  waitingForManualChecking: boolean;
+  prohibitFurtherManualChecking: boolean;
+  visited: boolean;
+  isSkipped: boolean;
+}
+
+export type SlideType = 'lesson' | 'quiz' | 'exercise' | 'flashcards';
+
+export type ScoringGroup =
+  | 'activity'
+  | 'exercise'
+  | 'homework'
+  | 'seminar'
+  | 'game';
 
 export interface Statistics {
   course: StatisticsCourse;
@@ -281,8 +366,6 @@ export interface CourseScoringGroup {
   id: ScoringGroup;
   name: string;
 }
-
-export type ScoringGroup = 'activity' | 'exercise' | 'homework' | 'seminar' | 'game';
 
 export interface CourseUnit {
   additional_scores: CourseAdditionalScore[];
