@@ -290,7 +290,7 @@ export interface UsersProgressResponse {
 
 export interface UserProgress {
   visitedSlides: { [slideId: string]: UserProgressSlideResult };
-  additionalScores: { [i: string]: { [j: string]: number } };
+  additionalScores: { [unitId: string]: { [scoringGroup in ScoringGroup]: number } };
 }
 
 export interface UserProgressSlideResult {

@@ -199,6 +199,14 @@ function fillStudentScore(
       }
     }
   }
+  if (studentProgress.additionalScores) {
+    for (const unitId of Object.keys(studentProgress.additionalScores)) {
+      for (const scoringGroup of Object.keys(studentProgress.additionalScores[unitId]).map(s => <ScoringGroup>s)) {
+        const score = studentProgress.additionalScores[unitId][scoringGroup];
+        studentScore.scores[scoringGroup] += score;
+      }
+    }
+  }
 }
 
 interface StudentScores {
