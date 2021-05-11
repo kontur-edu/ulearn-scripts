@@ -105,6 +105,8 @@ function getRowByStudentScore(studentScore: StudentScore) {
     studentScore.scores.exercise,
     studentScore.scores.homework,
     studentScore.scores.game,
+    studentScore.scores.activity,
+    studentScore.scores.seminar,
   ];
 }
 
@@ -165,11 +167,11 @@ async function prepareEmptyStudentScoresAsync(groups: GroupInfo[]) {
         groupId: group.id,
         groupName: group.name,
         scores: {
-          activity: 0,
           exercise: 0,
           homework: 0,
-          seminar: 0,
+          activity: 0,
           game: 0,
+          seminar: 0,
         },
       };
     }
