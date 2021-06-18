@@ -112,7 +112,7 @@ export async function readUserProgressBatchAsync(
   courseId: string,
   studentIds: string[]
 ) {
-  return requestApiAsync<UsersProgressResponse>(`/userProgress/${courseId}`, {
+  return requestApiAsync<UsersProgressResponse>(`/user-progress/${courseId}`, {
     method: 'POST',
     body: {
       userIds: studentIds,
