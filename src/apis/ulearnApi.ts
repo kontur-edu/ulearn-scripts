@@ -16,13 +16,13 @@ export async function getGroupAsync(groupId: number) {
 export async function getGroupsAsync(courseId: string) {
   return (
     await requestApiJsonAsync<{ groups: GroupInfo[] }>(
-      `/groups?course_id=${courseId}`
+      `/groups?courseId=${courseId}`
     )
   ).groups;
 }
 
 export async function postGroupAsync(courseId: string, groupName: string) {
-  return requestApiAsync<CreateGroupResponse>(`/groups?course_id=${courseId}`, {
+  return requestApiAsync<CreateGroupResponse>(`/groups?courseId=${courseId}`, {
     method: 'POST',
     body: {
       name: groupName,
@@ -54,7 +54,7 @@ export async function copyGroupAsync(
   makeMeOwner: boolean
 ) {
   return requestApiAsync<CopyGroupResponse>(
-    `/groups/${groupId}/copy?destination_course_id=${destinationCourseId}&make_me_owner=${makeMeOwner}`,
+    `/groups/${groupId}/copy?destinationCourseId=${destinationCourseId}&makeMeOwner=${makeMeOwner}`,
     {
       method: 'POST',
       json: true,
