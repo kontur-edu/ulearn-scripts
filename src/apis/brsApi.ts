@@ -19,11 +19,14 @@ export async function getDisciplineCachedAsync(
     return cacheResult;
   }
 
+  const total = await getDisciplineTotalAsync(year, termType, course, isModule);
+
   const result = await getDisciplineInternalAsync(
     year,
     termType,
     course,
-    isModule
+    isModule,
+    total
   );
   cache.save(cacheName, result);
   return result;
@@ -33,13 +36,15 @@ async function getDisciplineInternalAsync(
   year: number,
   termType: TermType,
   course: number,
-  isModule: boolean
+  isModule: boolean,
+  total: number
 ) {
-  const queryString = `?year=${year}&termType=${termType}&course=${course}&total=0&page=1&pageSize=1000&search=`;
+  const queryString = `?year=${year}&termType=${termType}&course=${course}&total=${total}&page=1&pageSize=${total}&search=`;
   if (isModule) {
-    const disciplines = await requestApiJsonAsync<Discipline[]>(
+    const paging = await requestApiJsonAsync<Paging<Discipline>>(
       '/mvc/mobile/module/fetch' + queryString
     );
+    const disciplines = paging.content;
     for (const d of disciplines) {
       d.isModule = true;
     }
@@ -56,12 +61,39 @@ async function getDisciplineInternalAsync(
   }
 }
 
+async function getDisciplineTotalAsync(
+  year: number,
+  termType: TermType,
+  course: number,
+  isModule: boolean
+) {
+  const moduleParameter = isModule ? '&its=true' : '';
+  const queryString =
+    `?year=${year}&termType=${termType}&course=${course}` + moduleParameter;
+  const total = await requestApiJsonAsync<number>(
+    '/mvc/mobile/discipline/amount' + queryString
+  );
+  return total;
+}
+
 export async function getAllStudentMarksAsync(discipline: Discipline) {
   const students = [
     ...(await getStudentMarksAsync(discipline, 'lecture', 'current')),
     ...(await getStudentMarksAsync(discipline, 'lecture', 'intermediate')),
     ...(await getStudentMarksAsync(discipline, 'laboratory', 'current')),
     ...(await getStudentMarksAsync(discipline, 'laboratory', 'intermediate')),
+    ...(await getStudentMarksAsync(discipline, 'practice', 'current')),
+    ...(await getStudentMarksAsync(discipline, 'practice', 'intermediate')),
+    ...(await getStudentMarksAsync(
+      discipline,
+      'additionalPractice',
+      'current'
+    )),
+    ...(await getStudentMarksAsync(
+      discipline,
+      'additionalPractice',
+      'intermediate'
+    )),
   ];
 
   const uniqueStudents: { [id: string]: StudentMark } = {};
@@ -70,7 +102,7 @@ export async function getAllStudentMarksAsync(discipline: Discipline) {
     uniqueStudents[s.studentUuid] = { ...knownStudent, ...s };
   }
 
-  return Object.keys(uniqueStudents).map(k => uniqueStudents[k]);
+  return Object.keys(uniqueStudents).map((k) => uniqueStudents[k]);
 }
 
 async function getStudentMarksAsync(
@@ -187,8 +219,8 @@ async function getControlActionsInternalAsync(
   const suffix = ');';
   const linesWithId = response
     .split('\r\n')
-    .map(s => s.trim())
-    .filter(s => s.startsWith(prefix));
+    .map((s) => s.trim())
+    .filter((s) => s.startsWith(prefix));
   if (linesWithId.length !== 1) {
     throw new Error(
       'Control actions page should contain single line target line with techcard identifier'
@@ -205,8 +237,8 @@ async function getControlActionsInternalAsync(
 
   const uuidPrefix = 'technologyCard';
   const result = columns
-    .filter(c => c.uuid && c.uuid.startsWith(uuidPrefix))
-    .map(c => ({
+    .filter((c) => c.uuid && c.uuid.startsWith(uuidPrefix))
+    .map((c) => ({
       uuid: c.uuid,
       uuidWithoutPrefix: c.uuid.substr(uuidPrefix.length),
       controlAction: c.controlAction,
@@ -259,14 +291,15 @@ export async function putStudentFailureAsync(
 }
 
 export async function updateAllMarksAsync(discipline: Discipline) {
-  // Одного вызова достаточно, чтобы обновить все оценки по предмету у группы.
   await updateMarksAsync(discipline, 'lecture', 'intermediate');
-  // await updateMarksAsync(discipline, 'lecture', 'current');
-  // await updateMarksAsync(discipline, 'lecture', 'intermediate');
-  // await updateMarksAsync(discipline, 'laboratory', 'current');
-  // await updateMarksAsync(discipline, 'laboratory', 'intermediate');
-  // await updateMarksAsync(discipline, 'practice', 'current');
-  // await updateMarksAsync(discipline, 'practice', 'intermediate');
+  await updateMarksAsync(discipline, 'lecture', 'current');
+  await updateMarksAsync(discipline, 'lecture', 'intermediate');
+  await updateMarksAsync(discipline, 'laboratory', 'current');
+  await updateMarksAsync(discipline, 'laboratory', 'intermediate');
+  await updateMarksAsync(discipline, 'practice', 'current');
+  await updateMarksAsync(discipline, 'practice', 'intermediate');
+  await updateMarksAsync(discipline, 'additionalPractice', 'current');
+  await updateMarksAsync(discipline, 'additionalPractice', 'intermediate');
 }
 
 async function updateMarksAsync(
@@ -342,9 +375,9 @@ async function authAsync(login: string, password: string): Promise<string> {
     },
   });
 
-  const sessionCookie = response.headers[
-    'set-cookie'
-  ].filter((cookie: string) => cookie.startsWith('JSESSIONID='))[0];
+  const sessionCookie = response.headers['set-cookie'].filter(
+    (cookie: string) => cookie.startsWith('JSESSIONID=')
+  )[0];
   const sid = (sessionCookie as string)
     .split(';')[0]
     .substr('JSESSIONID='.length)
@@ -401,7 +434,11 @@ export enum TermType {
   Spring = 2,
 }
 
-export type CardType = 'lecture' | 'laboratory' | 'practice' | 'additionalPractice';
+export type CardType =
+  | 'lecture'
+  | 'laboratory'
+  | 'practice'
+  | 'additionalPractice';
 export type MarkType = 'intermediate' | 'current';
 
 interface Paging<T> {
