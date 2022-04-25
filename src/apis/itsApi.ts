@@ -10,9 +10,9 @@ export async function authAsync(sessionInfo: string, itsAuth: string) {
   globalItsAuth = itsAuth;
 }
 
-export async function getProjectSubgroups(
+export async function getProjectSubgroupsAsync(
   groupId: string
-): Promise<ProjectSubgroup[]> {
+): Promise<Collection<ProjectSubgroup>> {
   const filterParams = [
     { property: 'Year', value: '' },
     { property: 'Semester', value: '' },
@@ -32,12 +32,12 @@ export async function getProjectSubgroups(
   const limit = 25;
   const queryString = `?competitionGroupId=${groupId}&filter=${filter}&group=${group}&page=${page}&start=${start}&limit=${limit}`;
 
-  const result = await requestApiJsonAsync<DataArray<ProjectSubgroup>>(
+  const result = await requestApiJsonAsync<Collection<ProjectSubgroup>>(
     '/ProjectSubgroup' + queryString,
     {},
     { 'X-Requested-With': 'XMLHttpRequest' }
   );
-  return result.data;
+  return result;
 }
 
 export async function getProjectSubgroupFormAsync(
@@ -167,20 +167,20 @@ export async function putProjectSubgroupFormAsync(
   return response.statusCode === 302 || response.statusCode === 200;
 }
 
-export async function getStudents(
+export async function getStudentsAsync(
   subgroupId: number,
   hideStudents: boolean
-): Promise<Student[]> {
+): Promise<Collection<Student>> {
   const page = 1;
   const start = 0;
   const limit = 25;
   const queryString = `?id=${subgroupId}&hideStudents=${hideStudents}&page=${page}&start=${start}&limit=${limit}`;
 
-  const result = await requestApiJsonAsync<DataArray<Student>>(
+  const result = await requestApiJsonAsync<Collection<Student>>(
     '/ProjectSubgroup/StudentsAjax' + queryString,
     {}
   );
-  return result.data;
+  return result;
 }
 
 export async function putStudentMembershipAsync(
@@ -311,7 +311,7 @@ interface ProjectSubgroupForm {
   antiforgery: string;
 }
 
-interface DataArray<T> {
+interface Collection<T> {
   data: Array<T>;
   total: number;
 }
