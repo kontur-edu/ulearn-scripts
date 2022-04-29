@@ -92,7 +92,6 @@ export async function putIterationAsync(
   projectId: number,
   iteration: Iteration
 ): Promise<Iteration> {
-
   return await requestApiAsync<Iteration>(
     `/projects/${projectId}/iterations/${iteration.id}/`,
     {
@@ -124,6 +123,33 @@ export async function postTaskAsync(
     {
       method: 'POST',
       body,
+      json: true,
+    }
+  );
+}
+
+export async function getEstimationsAsync(
+  projectId: number,
+  iterationId: number
+): Promise<Estimations> {
+  const result = await requestApiJsonAsync<Estimations>(
+    `/projects/${projectId}/iterations/${iterationId}/estimations/`,
+    {}
+  );
+  return result;
+}
+
+export async function putEstimationAsync(
+  projectId: number,
+  iterationId: number,
+  memberId: number,
+  estimation: Estimation
+): Promise<ResponseBody> {
+  return await requestApiAsync<ResponseBody>(
+    `/projects/${projectId}/iterations/${iterationId}/estimate/members/${memberId}`,
+    {
+      method: 'PUT',
+      body: estimation,
       json: true,
     }
   );
@@ -198,7 +224,8 @@ interface RequestCookies {
 }
 
 export interface ResponseBody {
-  errors: string[]; // null
+  success?: true;
+  errors?: { [key: string]: string[] } | null;
 }
 
 export interface KanbanBoard {
@@ -288,19 +315,20 @@ export interface Project {
   is_estimation_finished: boolean; // false
 }
 
-export interface Person {
-  id: number;
-  fullname: string; // "Домашних Иван Алексеевич"
-  photo: string; // null
-}
-
-export interface Student extends Person {
-  role: string; // null
-}
-
 export enum TermType {
   Fall = 1,
   Spring = 2,
+}
+
+export interface Estimations {
+  items: EstimatedStudentMember[];
+  count: number;
+  comments: string[];
+}
+
+export interface Estimation {
+  score: number | null;
+  commment: string | null;
 }
 
 export interface Members {
@@ -318,6 +346,10 @@ export interface CuratorMember extends Member {
   is_supercurator: boolean; // true
 }
 
+export interface EstimatedStudentMember extends StudentMember {
+  estimation: Estimation;
+}
+
 export interface StudentMember extends Member {
   // id: 20271
   group_name: string; // 'МЕН-110801'
@@ -329,4 +361,14 @@ export interface StudentMember extends Member {
 export interface Member extends Person {
   email: null;
   phone: null;
+}
+
+export interface Student extends Person {
+  role: string; // null
+}
+
+export interface Person {
+  id: number;
+  fullname: string; // "Домашних Иван Алексеевич"
+  photo: string; // null
 }
