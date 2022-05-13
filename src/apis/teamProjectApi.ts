@@ -146,7 +146,7 @@ export async function putEstimationAsync(
   estimation: Estimation
 ): Promise<ResponseBody> {
   return await requestApiAsync<ResponseBody>(
-    `/projects/${projectId}/iterations/${iterationId}/estimate/members/${memberId}`,
+    `/projects/${projectId}/iterations/${iterationId}/estimate/members/${memberId}/`,
     {
       method: 'PUT',
       body: estimation,
@@ -328,7 +328,7 @@ export interface Estimations {
 
 export interface Estimation {
   score: number | null;
-  commment: string | null;
+  comment: string | null;
 }
 
 export interface Members {
