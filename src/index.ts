@@ -8,6 +8,7 @@ import buildAutoMarksConfigAsync from './buildAutoMarksConfigAsync';
 import * as googleApi from './apis/googleApi';
 import * as itsApi from './apis/itsApi';
 import * as teamProjectApi from './apis/teamProjectApi';
+import * as fio from './helpers/fio';
 import JustDate from './helpers/JustDate';
 
 const rtfSpreadsheetPart1Id = '1Hjr4diSXOt-QuF0xU2WXjlGZ4hr8P_Ffiur7y_Be5jA';
@@ -131,6 +132,8 @@ for (let i = 0; i < rtfPart1Groups.length; i++) {
 run();
 
 async function run() {
+  // await runTeamProjectPutIterationMarks();
+
   // await runTeamProject();
   // await runIts();
 
@@ -159,7 +162,105 @@ async function run() {
   // console.log('!!!');
 }
 
-async function runTeamProject() {
+async function runTeamProjectPutIterationMarks() {
+  let save = true;
+  const iterationTitle = 'Апрельский спринт';
+  const projectName = 'Компьютерная игра';
+  const spreadsheetId = '';
+  const teamProjectToken = '';
+
+  await googleApi.authorizeAsync('ask-if-not-saved');
+  const sheet = googleApi.openSpreadsheet(spreadsheetId);
+  const data = await sheet.readAsync('A2:G');
+  const rows = data.values;
+  const scores: { teamNumber: number; studentName: string; score: number }[] =
+    [];
+  let lastTeamNumber = 0;
+  for (const row of rows) {
+    const teamNumber = row[4] ? parseInt(row[4], 0) : lastTeamNumber;
+    lastTeamNumber = teamNumber;
+    const studentName = row[2];
+    const score = parseInt(row[5], 10);
+    scores.push({ teamNumber, studentName, score: score });
+  }
+
+  await teamProjectApi.authAsync(teamProjectToken);
+
+  const projects = (
+    await teamProjectApi.getActiveProjectsAsync(2021, 2, 1, 100)
+  ).items;
+  const suitableProjects = projects.filter(
+    (it) => it.project_name === projectName
+  );
+  for (const project of suitableProjects) {
+    console.log('# Проект', project.project_name, project.instance_number);
+
+    const iterations = (
+      await teamProjectApi.getIterationsAsync(project.id)
+    ).items.filter((it) => it.title === iterationTitle);
+    const iteration = iterations[0];
+    if (!iteration) {
+      console.log('  Итерация не найдена');
+    }
+
+    const estimations = await (
+      await teamProjectApi.getEstimationsAsync(project.id, iteration.id)
+    ).items;
+    for (const estimation of estimations) {
+      const suitableScores = scores.filter(
+        (it) =>
+          it.teamNumber === project.instance_number &&
+          areNamesLike(estimation.fullname, it.studentName)
+      );
+
+      if (suitableScores.length === 1) {
+        const newScore = suitableScores[0].score;
+        const currentScore = estimation.estimation.score;
+
+        if (currentScore === newScore) {
+          console.log(
+            '  ',
+            estimation.fullname,
+            `: текущая оценка ${currentScore} совпадает с новой`
+          );
+        } else {
+          console.log(
+            '  ',
+            estimation.fullname,
+            `: текущая оценка ${currentScore}, новая оценка ${newScore}`
+          );
+          if (save) {
+            try {
+              await teamProjectApi.putEstimationAsync(
+                project.id,
+                iteration.id,
+                estimation.id,
+                {
+                  score: newScore,
+                  comment: null,
+                }
+              );
+            } catch (error) {}
+          }
+        }
+      } else if (suitableScores.length === 0) {
+        console.log('  ', estimation.fullname, ': нет новой оценки');
+      } else {
+        console.log('  ', estimation.fullname, ': несколько новых оценок');
+      }
+    }
+
+    console.log();
+  }
+}
+
+function areNamesLike(fullName: string, name: string) {
+  const fullNameKey = fio.toKey(fullName);
+  const nameKey = fio.toKey(name);
+  return fullNameKey.startsWith(nameKey);
+}
+
+async function runTeamProjectCreateIterations() {
   let save = true;
 
   const it1start = new JustDate(2022, 4, 1);
@@ -167,9 +268,7 @@ async function runTeamProject() {
   const it2start = new JustDate(2022, 5, 1);
   const it2end = new JustDate(2022, 5, 27);
 
-  await teamProjectApi.authAsync(
-    'JWT token'
-  );
+  await teamProjectApi.authAsync('JWT token');
 
   const projects = (
     await teamProjectApi.getActiveProjectsAsync(2021, 2, 1, 100)
