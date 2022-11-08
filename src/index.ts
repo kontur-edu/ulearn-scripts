@@ -69,8 +69,7 @@ const rtfPart1Groups = [
   'РТФ.2022 Пр.Ч1.У2 ЛБ, К, АТ-12',
 ];
 
-const rtfPart2Groups: string[] = [
-];
+const rtfPart2Groups: string[] = [];
 
 const mapping: { [key: string]: string } = {};
 for (let i = 0; i < rtfPart1Groups.length; i++) {
@@ -83,7 +82,8 @@ async function run() {
   // await runTeamProjectPutIterationMarks();
 
   // await runTeamProject();
-  // await runIts();
+  // await runItsUsedApp();
+  // await runItsDesignedApp();
 
   // console.log('START  runCreateGroups');
   // await runCreateGroups();
@@ -104,6 +104,10 @@ async function run() {
   console.log('START  runUpdateScores');
   await runUpdateScores();
   console.log('FINISH runUpdateScores');
+
+  console.log('START  runUpdateScoresComplexity');
+  await runUpdateScoresComplexity()
+  console.log('FINISH runUpdateScoresComplexity');
 
   // console.log('!!!');
   // await runPutMarksAutoRtfOpd();
@@ -316,7 +320,7 @@ async function runTeamProjectCreateIterations() {
   }
 }
 
-async function runIts() {
+async function runItsGame() {
   await itsApi.authAsync('', '');
   const subgroups = (await itsApi.getProjectSubgroupsAsync('604')).data;
   const students = (await itsApi.getStudentsAsync(subgroups[0].Id, false)).data;
@@ -326,18 +330,46 @@ async function runIts() {
   teams['2'] = ['Михаил', 'Матвей', 'Михаил'];
   teams['3'] = ['Михаил', 'Максим', 'Константин', 'Кирилл'];
 
-  const save = true;
+  await distributeStudentsToTeamsAsync(
+    subgroups,
+    'Компьютерная игра',
+    null,
+    teams,
+    false
+  );
+}
+
+async function distributeStudentsToTeamsAsync(
+  allSubgroups: itsApi.ProjectSubgroup[],
+  projectName: string,
+  moduleId: string | null,
+  teams: { [key: string]: string[] },
+  save: boolean = false
+) {
+  console.log('# ' + projectName + (moduleId !== null ? ' ' + moduleId : ''));
+  console.log();
+
+  const projectSubgroups = allSubgroups.filter(
+    (it) =>
+      it.Name.startsWith(projectName) &&
+      (moduleId === null || it.moduleId === moduleId)
+  );
+
+  const students = (
+    await itsApi.getStudentsAsync(projectSubgroups[0].Id, false)
+  ).data;
+
   let problemCount = 0;
   for (const key of Object.keys(teams)) {
     const team = teams[key];
 
     console.log('Команда', key);
-    const g1 = subgroups.filter(
-      (it) => it.Name === 'Компьютерная игра\\л' + key
+    const g1 = projectSubgroups.filter(
+      (it) => it.Name === projectName + '\\л' + key
     )[0];
     const form1 = await itsApi.getProjectSubgroupFormAsync(g1.Id);
     if (save) {
-      form1.limit = 4;
+      form1.limit = 5;
       form1.teacherId = form1.teachers[0].id;
       try {
         const r1 = await itsApi.putProjectSubgroupFormAsync(form1);
@@ -349,12 +381,12 @@ async function runIts() {
       }
     }
 
-    const g2 = subgroups.filter(
-      (it) => it.Name === 'Компьютерная игра\\экзамен\\' + key
+    const g2 = projectSubgroups.filter(
+      (it) => it.Name === projectName + '\\экзамен\\' + key
     )[0];
     const form2 = await itsApi.getProjectSubgroupFormAsync(g2.Id);
     if (save) {
-      form2.limit = 4;
+      form2.limit = 5;
       form2.teacherId = form2.teachers[0].id;
       try {
         const r2 = await itsApi.putProjectSubgroupFormAsync(form2);
@@ -391,7 +423,10 @@ async function runIts() {
     }
     console.log();
   }
-  console.log('Всего проблем:', problemCount);
+  console.log('Проблем по проекту:', problemCount);
+  console.log();
+
+  return problemCount;
 }
 
 async function runCreateGroups() {
@@ -488,9 +523,9 @@ async function runUpdateScores() {
 
 async function runUpdateScoresComplexity() {
   const spreadsheetId = rtfSpreadsheetPart1Id;
-  const readRange = 'ОСА!A2:E';
-  const writeRange = 'ОСА!A2:E';
-  const updateTimeRange = 'ОСА!G1';
+  const readRange = 'ОСА!A2:H';
+  const writeRange = 'ОСА!A2:H';
+  const updateTimeRange = 'ОСА!J1';
   const courseId = 'complexity';
   const groupNames = rtfPart1Groups;
   const result = await updateScoresFromUlearnAsync(
