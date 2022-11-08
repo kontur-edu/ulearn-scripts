@@ -273,7 +273,7 @@ interface Response {
   body: string;
 }
 
-interface ProjectSubgroup {
+export interface ProjectSubgroup {
   Id: number; // 19911
   Name: string; // 'Компьютерная игра\\экзамен\\9'
   Level: 'А' | 'B' | 'C';
