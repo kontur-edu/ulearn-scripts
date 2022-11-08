@@ -11,117 +11,65 @@ import * as teamProjectApi from './apis/teamProjectApi';
 import * as fio from './helpers/fio';
 import JustDate from './helpers/JustDate';
 
-const rtfSpreadsheetPart1Id = '1Hjr4diSXOt-QuF0xU2WXjlGZ4hr8P_Ffiur7y_Be5jA';
-const rtfSpreadsheetPart2Id = '1zRwQ_kK6Go8ecj42SpntZELDcseOoU9jAgRaR7Kvjx4';
+const rtfSpreadsheetPart1Id = '1UWO2A5RBRjWjKRiskqplHw3-sUgiAdz8HgqCfmEo7aE';
+// const rtfSpreadsheetPart2Id = '1zRwQ_kK6Go8ecj42SpntZELDcseOoU9jAgRaR7Kvjx4';
 
 const rtfPart1Groups = [
-  'РТФ.2021 Пр.Ч1.У1 ЛБ, К, АТ-01',
-  'РТФ.2021 Пр.Ч1.У1 ЛБ, К, АТ-02',
-  'РТФ.2021 Пр.Ч1.У1 ЛБ, К, АТ-03',
-  'РТФ.2021 Пр.Ч1.У1 ЛБ, К, АТ-04',
-  'РТФ.2021 Пр.Ч1.У1 ЛБ, К, АТ-05',
-  'РТФ.2021 Пр.Ч1.У1 ЛБ, К, АТ-06',
-  'РТФ.2021 Пр.Ч1.У1 ЛБ, К, АТ-07',
-  'РТФ.2021 Пр.Ч1.У1 ЛБ, К, АТ-08',
-  'РТФ.2021 Пр.Ч1.У1 ЛБ, К, АТ-09',
-  'РТФ.2021 Пр.Ч1.У1 ЛБ, К, АТ-10',
-  'РТФ.2021 Пр.Ч1.У1 ЛБ, К, АТ-11',
-  'РТФ.2021 Пр.Ч1.У1 ЛБ, К, АТ-12',
-  'РТФ.2021 Пр.Ч1.У1 ЛБ, К, АТ-13',
-  'РТФ.2021 Пр.Ч1.У1 ЛБ, К, АТ-14',
-  'РТФ.2021 Пр.Ч1.У1 ЛБ, К, АТ-15',
-  'РТФ.2021 Пр.Ч1.У1 ЛБ, К, АТ-16',
-  'РТФ.2021 Пр.Ч1.У1 ЛБ, К, АТ-17',
-  'РТФ.2021 Пр.Ч1.У1 ЛБ, К, АТ-18',
-  'РТФ.2021 Пр.Ч1.У1 ЛБ, К, АТ-19',
-  'РТФ.2021 Пр.Ч1.У1 ЛБ, К, АТ-20',
-  'РТФ.2021 Пр.Ч1.У1 ЛБ, К, АТ-21',
-  'РТФ.2021 Пр.Ч1.У1 ЛБ, К, АТ-22',
-  'РТФ.2021 Пр.Ч1.У1 ЛБ, К, АТ-23',
-  'РТФ.2021 Пр.Ч1.У1 ЛБ, К, АТ-24',
-  'РТФ.2021 Пр.Ч1.У1 ЛБ, К, АТ-25',
-  'РТФ.2021 Пр.Ч1.У1 ЛБ, К, АТ-26',
-  'РТФ.2021 Пр.Ч1.У1 ЛБ, К, АТ-27',
-  'РТФ.2021 Пр.Ч1.У1 ЛБ, К, АТ-28',
-  'РТФ.2021 Пр.Ч1.У1 ЛБ, К, АТ-29',
-  'РТФ.2021 Пр.Ч1.У1 ЛБ, К, АТ-30',
-  'РТФ.2021 Пр.Ч1.У1 ЛБ, К, АТ-31',
-  'РТФ.2021 Пр.Ч1.У1 ЛБ, К, АТ-32',
-  'РТФ.2021 Пр.Ч1.У1 ЛБ, К, АТ-33',
-  'РТФ.2021 Пр.Ч1.У1 ЛБ, К, АТ-34',
-  'РТФ.2021 Пр.Ч1.У1 ЛБ, К, АТ-35',
-  'РТФ.2021 Пр.Ч1.У1 ЛБ, К, АТ-36',
-  'РТФ.2021 Пр.Ч1.У1 ЛБ, К, АТ-37',
-  'РТФ.2021 Пр.Ч1.У1 ЛБ, К, АТ-38',
-  'РТФ.2021 Пр.Ч1.У1 ЛБ, К, АТ-39',
-  'РТФ.2021 Пр.Ч1.У1 ЛБ, К, АТ-40',
-  'РТФ.2021 Пр.Ч1.У2 ЛБ, К, АТ-01',
-  'РТФ.2021 Пр.Ч1.У2 ЛБ, К, АТ-02',
-  'РТФ.2021 Пр.Ч1.У2 ЛБ, К, АТ-03',
-  'РТФ.2021 Пр.Ч1.У2 ЛБ, К, АТ-04',
-  'РТФ.2021 Пр.Ч1.У2 ЛБ, К, АТ-05',
-  'РТФ.2021 Пр.Ч1.У2 ЛБ, К, АТ-06',
-  'РТФ.2021 Пр.Ч1.У2 ЛБ, К, АТ-07',
-  'РТФ.2021 Пр.Ч1.У2 ЛБ, К, АТ-08',
-  'РТФ.2021 Пр.Ч1.У2 ЛБ, К, АТ-09',
-  'РТФ.2021 Пр.Ч1.У2 ЛБ, К, АТ-10',
-  'РТФ.2021 Пр.Ч1.У2 ЛБ, К, АТ-11',
-  'РТФ.2021 Пр.Ч1.У2 ЛБ, К, АТ-12',
+  'РТФ.2022 Пр.Ч1.У1 ЛБ, К, АТ-01',
+  'РТФ.2022 Пр.Ч1.У1 ЛБ, К, АТ-02',
+  'РТФ.2022 Пр.Ч1.У1 ЛБ, К, АТ-03',
+  'РТФ.2022 Пр.Ч1.У1 ЛБ, К, АТ-04',
+  'РТФ.2022 Пр.Ч1.У1 ЛБ, К, АТ-05',
+  'РТФ.2022 Пр.Ч1.У1 ЛБ, К, АТ-06',
+  'РТФ.2022 Пр.Ч1.У1 ЛБ, К, АТ-07',
+  'РТФ.2022 Пр.Ч1.У1 ЛБ, К, АТ-08',
+  'РТФ.2022 Пр.Ч1.У1 ЛБ, К, АТ-09',
+  'РТФ.2022 Пр.Ч1.У1 ЛБ, К, АТ-10',
+  'РТФ.2022 Пр.Ч1.У1 ЛБ, К, АТ-11',
+  'РТФ.2022 Пр.Ч1.У1 ЛБ, К, АТ-12',
+  'РТФ.2022 Пр.Ч1.У1 ЛБ, К, АТ-13',
+  'РТФ.2022 Пр.Ч1.У1 ЛБ, К, АТ-14',
+  'РТФ.2022 Пр.Ч1.У1 ЛБ, К, АТ-15',
+  'РТФ.2022 Пр.Ч1.У1 ЛБ, К, АТ-16',
+  'РТФ.2022 Пр.Ч1.У1 ЛБ, К, АТ-17',
+  'РТФ.2022 Пр.Ч1.У1 ЛБ, К, АТ-18',
+  'РТФ.2022 Пр.Ч1.У1 ЛБ, К, АТ-19',
+  'РТФ.2022 Пр.Ч1.У1 ЛБ, К, АТ-20',
+  'РТФ.2022 Пр.Ч1.У1 ЛБ, К, АТ-21',
+  'РТФ.2022 Пр.Ч1.У1 ЛБ, К, АТ-22',
+  'РТФ.2022 Пр.Ч1.У1 ЛБ, К, АТ-23',
+  'РТФ.2022 Пр.Ч1.У1 ЛБ, К, АТ-24',
+  'РТФ.2022 Пр.Ч1.У1 ЛБ, К, АТ-25',
+  'РТФ.2022 Пр.Ч1.У1 ЛБ, К, АТ-26',
+  'РТФ.2022 Пр.Ч1.У1 ЛБ, К, АТ-27',
+  'РТФ.2022 Пр.Ч1.У1 ЛБ, К, АТ-28',
+  'РТФ.2022 Пр.Ч1.У1 ЛБ, К, АТ-29',
+  'РТФ.2022 Пр.Ч1.У1 ЛБ, К, АТ-30',
+  'РТФ.2022 Пр.Ч1.У1 ЛБ, К, АТ-31',
+  'РТФ.2022 Пр.Ч1.У1 ЛБ, К, АТ-32',
+  'РТФ.2022 Пр.Ч1.У1 ЛБ, К, АТ-33',
+  'РТФ.2022 Пр.Ч1.У1 ЛБ, К, АТ-34',
+  'РТФ.2022 Пр.Ч1.У1 ЛБ, К, АТ-35',
+  'РТФ.2022 Пр.Ч1.У1 ЛБ, К, АТ-36',
+  'РТФ.2022 Пр.Ч1.У1 ЛБ, К, АТ-37',
+  'РТФ.2022 Пр.Ч1.У1 ЛБ, К, АТ-38',
+  'РТФ.2022 Пр.Ч1.У1 ЛБ, К, АТ-39',
+  'РТФ.2022 Пр.Ч1.У1 ЛБ, К, АТ-40',
+  'РТФ.2022 Пр.Ч1.У2 ЛБ, К, АТ-01',
+  'РТФ.2022 Пр.Ч1.У2 ЛБ, К, АТ-02',
+  'РТФ.2022 Пр.Ч1.У2 ЛБ, К, АТ-03',
+  'РТФ.2022 Пр.Ч1.У2 ЛБ, К, АТ-04',
+  'РТФ.2022 Пр.Ч1.У2 ЛБ, К, АТ-05',
+  'РТФ.2022 Пр.Ч1.У2 ЛБ, К, АТ-06',
+  'РТФ.2022 Пр.Ч1.У2 ЛБ, К, АТ-07',
+  'РТФ.2022 Пр.Ч1.У2 ЛБ, К, АТ-08',
+  'РТФ.2022 Пр.Ч1.У2 ЛБ, К, АТ-09',
+  'РТФ.2022 Пр.Ч1.У2 ЛБ, К, АТ-10',
+  'РТФ.2022 Пр.Ч1.У2 ЛБ, К, АТ-11',
+  'РТФ.2022 Пр.Ч1.У2 ЛБ, К, АТ-12',
 ];
 
-const rtfPart2Groups = [
-  'РТФ.2021 Пр.Ч2.У1 ЛБ, К, АТ-01',
-  'РТФ.2021 Пр.Ч2.У1 ЛБ, К, АТ-02',
-  'РТФ.2021 Пр.Ч2.У1 ЛБ, К, АТ-03',
-  'РТФ.2021 Пр.Ч2.У1 ЛБ, К, АТ-04',
-  'РТФ.2021 Пр.Ч2.У1 ЛБ, К, АТ-05',
-  'РТФ.2021 Пр.Ч2.У1 ЛБ, К, АТ-06',
-  'РТФ.2021 Пр.Ч2.У1 ЛБ, К, АТ-07',
-  'РТФ.2021 Пр.Ч2.У1 ЛБ, К, АТ-08',
-  'РТФ.2021 Пр.Ч2.У1 ЛБ, К, АТ-09',
-  'РТФ.2021 Пр.Ч2.У1 ЛБ, К, АТ-10',
-  'РТФ.2021 Пр.Ч2.У1 ЛБ, К, АТ-11',
-  'РТФ.2021 Пр.Ч2.У1 ЛБ, К, АТ-12',
-  'РТФ.2021 Пр.Ч2.У1 ЛБ, К, АТ-13',
-  'РТФ.2021 Пр.Ч2.У1 ЛБ, К, АТ-14',
-  'РТФ.2021 Пр.Ч2.У1 ЛБ, К, АТ-15',
-  'РТФ.2021 Пр.Ч2.У1 ЛБ, К, АТ-16',
-  'РТФ.2021 Пр.Ч2.У1 ЛБ, К, АТ-17',
-  'РТФ.2021 Пр.Ч2.У1 ЛБ, К, АТ-18',
-  'РТФ.2021 Пр.Ч2.У1 ЛБ, К, АТ-19',
-  'РТФ.2021 Пр.Ч2.У1 ЛБ, К, АТ-20',
-  'РТФ.2021 Пр.Ч2.У1 ЛБ, К, АТ-21',
-  'РТФ.2021 Пр.Ч2.У1 ЛБ, К, АТ-22',
-  'РТФ.2021 Пр.Ч2.У1 ЛБ, К, АТ-23',
-  'РТФ.2021 Пр.Ч2.У1 ЛБ, К, АТ-24',
-  'РТФ.2021 Пр.Ч2.У1 ЛБ, К, АТ-25',
-  'РТФ.2021 Пр.Ч2.У1 ЛБ, К, АТ-26',
-  'РТФ.2021 Пр.Ч2.У1 ЛБ, К, АТ-27',
-  'РТФ.2021 Пр.Ч2.У1 ЛБ, К, АТ-28',
-  'РТФ.2021 Пр.Ч2.У1 ЛБ, К, АТ-29',
-  'РТФ.2021 Пр.Ч2.У1 ЛБ, К, АТ-30',
-  'РТФ.2021 Пр.Ч2.У1 ЛБ, К, АТ-31',
-  'РТФ.2021 Пр.Ч2.У1 ЛБ, К, АТ-32',
-  'РТФ.2021 Пр.Ч2.У1 ЛБ, К, АТ-33',
-  'РТФ.2021 Пр.Ч2.У1 ЛБ, К, АТ-34',
-  'РТФ.2021 Пр.Ч2.У1 ЛБ, К, АТ-35',
-  'РТФ.2021 Пр.Ч2.У1 ЛБ, К, АТ-36',
-  'РТФ.2021 Пр.Ч2.У1 ЛБ, К, АТ-37',
-  'РТФ.2021 Пр.Ч2.У1 ЛБ, К, АТ-38',
-  'РТФ.2021 Пр.Ч2.У1 ЛБ, К, АТ-39',
-  'РТФ.2021 Пр.Ч2.У1 ЛБ, К, АТ-40',
-  'РТФ.2021 Пр.Ч2.У2 ЛБ, К, АТ-01',
-  'РТФ.2021 Пр.Ч2.У2 ЛБ, К, АТ-02',
-  'РТФ.2021 Пр.Ч2.У2 ЛБ, К, АТ-03',
-  'РТФ.2021 Пр.Ч2.У2 ЛБ, К, АТ-04',
-  'РТФ.2021 Пр.Ч2.У2 ЛБ, К, АТ-05',
-  'РТФ.2021 Пр.Ч2.У2 ЛБ, К, АТ-06',
-  'РТФ.2021 Пр.Ч2.У2 ЛБ, К, АТ-07',
-  'РТФ.2021 Пр.Ч2.У2 ЛБ, К, АТ-08',
-  'РТФ.2021 Пр.Ч2.У2 ЛБ, К, АТ-09',
-  'РТФ.2021 Пр.Ч2.У2 ЛБ, К, АТ-10',
-  'РТФ.2021 Пр.Ч2.У2 ЛБ, К, АТ-11',
-  'РТФ.2021 Пр.Ч2.У2 ЛБ, К, АТ-12',
+const rtfPart2Groups: string[] = [
 ];
 
 const mapping: { [key: string]: string } = {};
@@ -162,97 +110,104 @@ async function run() {
   // console.log('!!!');
 }
 
-async function runTeamProjectPutIterationMarks() {
-  let save = true;
-  const iterationTitle = 'Апрельский спринт';
-  const projectName = 'Компьютерная игра';
-  const spreadsheetId = '';
-  const teamProjectToken = '';
+// async function runTeamProjectPutIterationMarks() {
+//   let save = true;
+//   const iterationTitle = 'Майский спринт';
+//   const projectName = 'Компьютерная игра';
+//   const spreadsheetId = '1UbgK05lAgaw87ddn1Sbqtc7__UoteVSekGknKX0Izqw';
+//   const teamProjectToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYmYiOjE2NTQ1MzY2NDgsImV4cCI6MTY1NDU0MDI0OCwidXNlcklkIjo1Mjc3fQ.-FH1U0IQU8TONEXftCsvMTJ_LEWSd1I_1rSwQHDSkDk';
+//   const scoreIndex = 6;
 
-  await googleApi.authorizeAsync('ask-if-not-saved');
-  const sheet = googleApi.openSpreadsheet(spreadsheetId);
-  const data = await sheet.readAsync('A2:G');
-  const rows = data.values;
-  const scores: { teamNumber: number; studentName: string; score: number }[] =
-    [];
-  let lastTeamNumber = 0;
-  for (const row of rows) {
-    const teamNumber = row[4] ? parseInt(row[4], 0) : lastTeamNumber;
-    lastTeamNumber = teamNumber;
-    const studentName = row[2];
-    const score = parseInt(row[5], 10);
-    scores.push({ teamNumber, studentName, score: score });
-  }
+//   await googleApi.authorizeAsync('ask-if-not-saved');
+//   const sheet = googleApi.openSpreadsheet(spreadsheetId);
+//   const data = await sheet.readAsync('\'Оценки кураторов\'!A2:G');
+//   const rows = data.values;
+//   const scores: { teamNumber: number; studentName: string; score: number }[] =
+//     [];
+//   let lastTeamNumber = 0;
+//   for (const row of rows) {
+//     const teamNumber = row[4] ? parseInt(row[4], 0) : lastTeamNumber;
+//     lastTeamNumber = teamNumber;
+//     const studentName = row[2];
+//     const score = parseInt(row[scoreIndex], 10);
+//     scores.push({ teamNumber, studentName, score: score });
+//   }
 
-  await teamProjectApi.authAsync(teamProjectToken);
+//   await teamProjectApi.authAsync(teamProjectToken);
 
-  const projects = (
-    await teamProjectApi.getActiveProjectsAsync(2021, 2, 1, 100)
-  ).items;
-  const suitableProjects = projects.filter(
-    (it) => it.project_name === projectName
-  );
-  for (const project of suitableProjects) {
-    console.log('# Проект', project.project_name, project.instance_number);
+//   const projects = (
+//     await teamProjectApi.getActiveProjectsAsync(2021, 2, 1, 100)
+//   ).items;
+//   const suitableProjects = projects.filter(
+//     (it) => it.project_name === projectName
+//   );
+//   for (const project of suitableProjects) {
+//     console.log('# Проект', project.project_name, project.instance_number);
 
-    const iterations = (
-      await teamProjectApi.getIterationsAsync(project.id)
-    ).items.filter((it) => it.title === iterationTitle);
-    const iteration = iterations[0];
-    if (!iteration) {
-      console.log('  Итерация не найдена');
-    }
+//     const iterations = (
+//       await teamProjectApi.getIterationsAsync(project.id)
+//     ).items.filter((it) => it.title === iterationTitle);
+//     const iteration = iterations[0];
+//     if (!iteration) {
+//       console.log('  Итерация не найдена');
+//     }
 
-    const estimations = await (
-      await teamProjectApi.getEstimationsAsync(project.id, iteration.id)
-    ).items;
-    for (const estimation of estimations) {
-      const suitableScores = scores.filter(
-        (it) =>
-          it.teamNumber === project.instance_number &&
-          areNamesLike(estimation.fullname, it.studentName)
-      );
+//     const estimations = await (
+//       await teamProjectApi.getEstimationsAsync(project.id, iteration.id)
+//     ).items;
+//     for (const estimation of estimations) {
+//       const suitableScores = scores.filter(
+//         (it) =>
+//           it.teamNumber === project.instance_number &&
+//           areNamesLike(estimation.fullname, it.studentName)
+//       );
 
-      if (suitableScores.length === 1) {
-        const newScore = suitableScores[0].score;
-        const currentScore = estimation.estimation.score;
+//       if (suitableScores.length === 1) {
+//         const newScore = suitableScores[0].score;
+//         const currentScore = estimation.estimation.score;
 
-        if (currentScore === newScore) {
-          console.log(
-            '  ',
-            estimation.fullname,
-            `: текущая оценка ${currentScore} совпадает с новой`
-          );
-        } else {
-          console.log(
-            '  ',
-            estimation.fullname,
-            `: текущая оценка ${currentScore}, новая оценка ${newScore}`
-          );
-          if (save) {
-            try {
-              await teamProjectApi.putEstimationAsync(
-                project.id,
-                iteration.id,
-                estimation.id,
-                {
-                  score: newScore,
-                  comment: null,
-                }
-              );
-            } catch (error) {}
-          }
-        }
-      } else if (suitableScores.length === 0) {
-        console.log('  ', estimation.fullname, ': нет новой оценки');
-      } else {
-        console.log('  ', estimation.fullname, ': несколько новых оценок');
-      }
-    }
+//         if (isNaN(newScore)) {
+//           console.log(
+//             '  ',
+//             estimation.fullname,
+//             `: новая оценка не задана`
+//           );
+//         } else if (currentScore === newScore) {
+//           console.log(
+//             '  ',
+//             estimation.fullname,
+//             `: текущая оценка ${currentScore} совпадает с новой`
+//           );
+//         } else {
+//           console.log(
+//             '  ',
+//             estimation.fullname,
+//             `: текущая оценка ${currentScore}, новая оценка ${newScore}`
+//           );
+//           if (save) {
+//             try {
+//               await teamProjectApi.putEstimationAsync(
+//                 project.id,
+//                 iteration.id,
+//                 estimation.id,
+//                 {
+//                   score: newScore,
+//                   comment: null,
+//                 }
+//               );
+//             } catch (error) {}
+//           }
+//         }
+//       } else if (suitableScores.length === 0) {
+//         console.log('  ', estimation.fullname, ': нет новой оценки');
+//       } else {
+//         console.log('  ', estimation.fullname, ': несколько новых оценок');
+//       }
+//     }
 
-    console.log();
-  }
-}
+//     console.log();
+//   }
+// }
 
 function areNamesLike(fullName: string, name: string) {
   const fullNameKey = fio.toKey(fullName);
@@ -482,7 +437,7 @@ async function runCopyGroupsToComplexity() {
 async function runMoveStudents() {
   try {
     const actualStudents = await readStudents.fromSpreadsheetAsync(
-      rtfSpreadsheetPart2Id,
+      rtfSpreadsheetPart1Id,
       'Итого!H7:L',
       4, // fullName
       3, // groupName
@@ -492,12 +447,12 @@ async function runMoveStudents() {
     );
 
     await moveAllStudentsAsync(
-      'basicprogramming2',
+      'basicprogramming',
       actualStudents,
       [
         {
           courseId: 'basicprogramming',
-          groupName: 'Регистрация ИРИТ-РТФ УрФУ 2021',
+          groupName: 'Регистрация ИРИТ-РТФ УрФУ 2022',
         },
       ],
       {
@@ -510,12 +465,12 @@ async function runMoveStudents() {
 }
 
 async function runUpdateScores() {
-  const spreadsheetId = rtfSpreadsheetPart2Id;
+  const spreadsheetId = rtfSpreadsheetPart1Id;
   const readRange = 'ОП!A2:H';
   const writeRange = 'ОП!A2:H';
   const updateTimeRange = 'ОП!J1';
-  const courseId = 'basicprogramming2';
-  const groupNames = rtfPart2Groups;
+  const courseId = 'basicprogramming';
+  const groupNames = rtfPart1Groups;
   const onlyMaxScoresForHomework = false;
 
   const result = await updateScoresFromUlearnAsync(
