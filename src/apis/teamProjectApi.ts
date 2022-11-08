@@ -184,9 +184,9 @@ async function requestApiAsync<T>(
   }
 
   headers = headers || {};
-  headers['Authorization'] = globalAuthJwt.startsWith('JWT ')
+  headers['Authorization'] = globalAuthJwt.startsWith('Bearer ')
     ? globalAuthJwt
-    : 'JWT ' + globalAuthJwt;
+    : 'Bearer ' + globalAuthJwt;
 
   cookies = cookies || {};
 
@@ -284,6 +284,24 @@ export interface Projects {
 }
 
 export interface Project {
+  id: number; // 30855
+  is_completed: boolean; // false
+  title: string; // "Спроектированное приложение (пересдачи)"
+  curator: Curator;
+  passport_number: string; // "107/ЛКП-2248-2022
+  instance_number: number; // 1
+  customer: string; // "Акционерное общество \\\"ПРОИЗВОДСТВЕННАЯ ФИРМА \\\"СКБ КОНТУР\\\"",
+  is_multiprogram: boolean; // false
+  is_kernel: boolean; // false
+  number_of_iterations: number; // 0
+  number_of_members: number; // 1
+  current_iteration: null; // null
+  members: Student[];
+  updates: null; // null
+  warnings: null; // null
+}
+
+export interface Project2021 {
   id: number; // 19931
   title: string; // "Компьютерная игра"
   description: string; // "<ol><li><p>В каждой команде 3 человека."
@@ -365,6 +383,11 @@ export interface Member extends Person {
 
 export interface Student extends Person {
   role: string; // null
+}
+
+export interface Curator extends Person {
+  is_external: boolean;
+  shortname: string; // "Домашних И.А."
 }
 
 export interface Person {
