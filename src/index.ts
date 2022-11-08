@@ -79,9 +79,8 @@ for (let i = 0; i < rtfPart1Groups.length; i++) {
 run();
 
 async function run() {
+  // await runTeamProjectCreateIterations();
   // await runTeamProjectPutIterationMarks();
-
-  // await runTeamProject();
   // await runItsUsedApp();
   // await runItsDesignedApp();
 
@@ -222,48 +221,59 @@ function areNamesLike(fullName: string, name: string) {
 async function runTeamProjectCreateIterations() {
   let save = true;
 
-  const it1start = new JustDate(2022, 4, 1);
-  const it1end = new JustDate(2022, 4, 30);
-  const it2start = new JustDate(2022, 5, 1);
-  const it2end = new JustDate(2022, 5, 27);
+  const it1start = new JustDate(2022, 11, 8);
+  const it1end = new JustDate(2022, 11, 13);
+  const it2start = new JustDate(2022, 11, 14);
+  const it2end = new JustDate(2022, 12, 4);
+  const it3start = new JustDate(2022, 12, 5);
+  const it3end = new JustDate(2022, 12, 25);
 
-  await teamProjectApi.authAsync('JWT token');
+  await teamProjectApi.authAsync(
+    'JWT-token'
+  );
 
   const projects = (
-    await teamProjectApi.getActiveProjectsAsync(2021, 2, 1, 100)
+    await teamProjectApi.getActiveProjectsAsync(2022, 1, 1, 100)
   ).items;
-  const gameProjects = projects.filter(
-    (it) => it.project_name === 'Компьютерная игра'
+  let filteredProjects = projects.filter(
+    (it) => it.title.startsWith('Приложение')
   );
-  for (const gameProject of gameProjects) {
-    console.log(
-      '# Проект',
-      gameProject.project_name,
-      gameProject.instance_number
-    );
 
-    const iterations = (await teamProjectApi.getIterationsAsync(gameProject.id))
+  for (const project of filteredProjects) {
+    console.log('# Проект', project.title, project.instance_number);
+
+    const iterations = (await teamProjectApi.getIterationsAsync(project.id))
       .items;
 
     if (iterations.length === 0) {
       console.log('Добавление итераций...');
       if (save) {
         const r1 = await teamProjectApi.postIterationAsync(
-          gameProject.id,
-          'Апрельский спринт',
+          project.id,
+          'Первый спринт',
           '',
           it1start,
           it1end
         );
         console.log(r1);
+
         const r2 = await teamProjectApi.postIterationAsync(
-          gameProject.id,
-          'Майский спринт',
+          project.id,
+          'Второй спринт',
           '',
           it2start,
           it2end
         );
         console.log(r2);
+
+        const r3 = await teamProjectApi.postIterationAsync(
+          project.id,
+          'Третий спринт',
+          '',
+          it3start,
+          it3end
+        );
+        console.log(r3);
       }
     } else {
       console.log('Итерации проекта:');
@@ -274,49 +284,65 @@ async function runTeamProjectCreateIterations() {
           iteration.date_begin,
           iteration.date_end
         );
-        if (
-          iteration.title === 'Апрельский спринт' &&
-          (!iteration.date_begin || !iteration.date_end)
-        ) {
-          console.log('  Обновление... ', iteration.title);
-          iteration.date_begin = it1start.toDashedString();
-          iteration.date_end = it1end.toDashedString();
-          if (save) {
-            const updatedIteration = await teamProjectApi.putIterationAsync(
-              gameProject.id,
-              iteration
-            );
-            console.log(
-              '  обновлено: ',
-              updatedIteration.title,
-              updatedIteration.date_begin,
-              updatedIteration.date_end
-            );
-          }
-        } else if (
-          iteration.title === 'Майский спринт' &&
-          (!iteration.date_begin || !iteration.date_end)
-        ) {
-          console.log('  Обновление... ', iteration.title);
-          iteration.date_begin = it2start.toDashedString();
-          iteration.date_end = it2end.toDashedString();
-          if (save) {
-            const updatedIteration = await teamProjectApi.putIterationAsync(
-              gameProject.id,
-              iteration
-            );
-            console.log(
-              '  обновлено: ',
-              updatedIteration.title,
-              updatedIteration.date_begin,
-              updatedIteration.date_end
-            );
-          }
-        }
+
+        await tryUpdateIteration(
+          iteration,
+          'Первый спринт',
+          it1start,
+          it1end,
+          project,
+          save
+        );
+        await tryUpdateIteration(
+          iteration,
+          'Второй спринт',
+          it2start,
+          it2end,
+          project,
+          save
+        );
+        await tryUpdateIteration(
+          iteration,
+          'Третий спринт',
+          it3start,
+          it3end,
+          project,
+          save
+        );
       }
     }
 
     console.log();
+  }
+}
+
+async function tryUpdateIteration(
+  iteration: teamProjectApi.Iteration,
+  iterationName: string,
+  startDate: JustDate,
+  endDate: JustDate,
+  project: teamProjectApi.Project,
+  save: boolean
+) {
+  if (
+    iteration.title === iterationName &&
+    (!iteration.date_begin || !iteration.date_end)
+  ) {
+    console.log('  Обновление... ', iteration.title);
+    iteration.date_begin = startDate.toDashedString();
+    iteration.date_end = endDate.toDashedString();
+    if (save) {
+      const updatedIteration = await teamProjectApi.putIterationAsync(
+        project.id,
+        iteration
+      );
+      console.log(
+        '  обновлено: ',
+        updatedIteration.title,
+        updatedIteration.date_begin,
+        updatedIteration.date_end
+      );
+    }
   }
 }
 
@@ -337,6 +363,54 @@ async function runItsGame() {
     teams,
     false
   );
+}
+
+async function runItsSample() {
+  await itsApi.authAsync(
+    'sessionInfo',
+    'itsAuth'
+  );
+  const groupId = '1';
+  const allSubgroups = (await itsApi.getProjectSubgroupsAsync(groupId)).data;
+  const projectName = 'Приложение';
+
+  const projects = [
+    {
+      // Куратор 1
+      moduleId: '',
+      teams: {
+        ['1']: [
+          'Фамилия Имя',
+        ],
+        ['2']: [
+          'Фамилия Имя',
+        ],
+      },
+    },
+    {
+      // Куратор 2
+      moduleId: '',
+      teams: {
+        ['1']: [
+          'Фамилия Имя',
+        ],
+      },
+    },
+  ];
+
+  const save = false;
+  let problemCount = 0;
+  for (const project of projects) {
+    problemCount += await distributeStudentsToTeamsAsync(
+      allSubgroups,
+      projectName,
+      project.moduleId,
+      project.teams,
+      save
+    );
+  }
+
+  console.log('Всего проблем:', problemCount);
 }
 
 async function distributeStudentsToTeamsAsync(
